@@ -1,3 +1,6 @@
 *.cbp
 *.layout
+*.exe
 .vscode
+bin/
+obj/
