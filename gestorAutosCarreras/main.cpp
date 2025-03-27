@@ -1,6 +1,8 @@
-#include <iostream>
 #include <array>
 #include <cctype>
+#include <fstream>
+#include <cstdlib>
+#include <iostream>
 #include <regex>
 
 using namespace std;
@@ -8,7 +10,7 @@ using namespace std;
 // Gestor autos
 const size_t filasAutos{7};
 const size_t columnasAutos{25};
-bool insertarAuto(const array<array<char, columnasAutos>, filasAutos> &);
+bool insertarAuto(const array<string, columnasAutos> &, string);
 string obtenerAuto(string);
 bool eliminarAuto(string);
 string modificarAuto(const array<array<char, 3>, 2> &);
@@ -36,13 +38,16 @@ string formatearSalidaDatosAuto(string[]);
 string formatearSalidaDatosCompetencia(string[]);
 
 // Formateador Entrada?
-string formatearEntradaDatosAuto(string[]);
+string formatearEntradaDatosAuto(const array<string, columnasAutos> &);
 string formatearEntradaDatosCompetencia(string[]);
 
 int main()
 {
+    string direccionArchivoAutos = "Autos.txt";
+    string direccionArchivoCompetencias = "Competencias.txt";
+
     cout << "Hello world!" << endl;
-    bool resultado = validarNumeroRango("9", 20, 10);
+    bool resultado = insertarAuto({"Lore", "ipsum", "epomarez", "Ughst", "1234", "4321", "1111"}, direccionArchivoAutos);
     cout << "holaaaaaaaaaaaaa" << resultado;
     return 0;
 }
@@ -115,4 +120,39 @@ bool validarSoloNumero(const string &numero)
     }
 
     return true;
+}
+
+bool insertarAuto(const array<string, columnasAutos> &infoAuto, string nombreArchivo)
+{
+
+    ofstream appArchivoAutos(nombreArchivo, ios::app);
+    if (!appArchivoAutos)
+    {
+        cout << "Hubo un error, no se pudo abrir el archivo!" << endl;
+        return false;
+    }
+    else
+    {
+        cout << "El archivo se pudo abrir exitosamente!" << endl;
+    }
+
+    string registroAuto = formatearEntradaDatosAuto(infoAuto);
+
+    appArchivoAutos << registroAuto;
+
+    return true;
+}
+
+// Formateador Entrada?
+string formatearEntradaDatosAuto(const array<string, columnasAutos> &infoAuto)
+{
+    string registro;
+    for (const string &campo : infoAuto)
+    {
+        if (!registro.empty())
+            registro.append(" ");
+        registro += campo;
+    }
+
+    return registro;
 }
