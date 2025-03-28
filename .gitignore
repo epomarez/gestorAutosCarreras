@@ -3,5 +3,7 @@
 *.exe
 *.txt
 .vscode
+*.o
+*.depend
 bin/
 obj/
