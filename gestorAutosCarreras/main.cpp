@@ -34,11 +34,11 @@ bool validarNombre(string);
 bool validarNumeroRango(const string &, const int, const int);
 bool validarSoloNumero(const string &);
 
-// Formateador Salida?
+//? Formateador Salida
 string formatearSalidaDatosAuto(string[]);
 string formatearSalidaDatosCompetencia(string[]);
 
-// Formateador Entrada?
+//? Formateador Entrada
 string formatearRegistro(const array<string, columnasRegistro> &);
 // string formatearEntradaDatosCompetencia(string[]);
 
@@ -128,6 +128,47 @@ bool validarSoloNumero(const string &numero)
 }
 
 // Gestor autos
+bool eliminarAuto(const string codigo, const string direccionArchivo)
+{
+    array<string, 7> registroAuto;
+
+    try
+    {
+        ifstream inArchivoAutos(direccionArchivo, ios::in);
+        ofstream outArchivoTemp("temp.txt", ios::out);
+        bool autoEncontrado = false;
+
+        cout << "El archivo se abrió correctamente" << endl;
+        while (inArchivoAutos >> registroAuto[0] >> registroAuto[1] >> registroAuto[2] >> registroAuto[3] >> registroAuto[4] >> registroAuto[5] >> registroAuto[6])
+        {
+            if (!(registroAuto[0] == codigo))
+            {
+                outArchivoTemp << registroAuto[0] << registroAuto[1] << registroAuto[2] << registroAuto[3] << registroAuto[4] << registroAuto[5] << registroAuto[6];
+            }
+            else
+            {
+                autoEncontrado = true;
+            }
+        }
+
+        if (autoEncontrado)
+        {
+            remove(direccionArchivo.c_str());
+            rename("temp.txt", direccionArchivo.c_str());
+            cout << "Registro eliminado correctamente" << endl;
+        }
+        else
+        {
+            remove("temp.txt");
+            cout << "No se encontró el registro del auto " << codigo << endl;
+        }
+    }
+    catch (const exception &e)
+    {
+        cerr << "No se pudo abrir el archivo" << endl;
+    }
+}
+
 bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionArchivo)
 {
 
