@@ -1,16 +1,19 @@
 #include <array>
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <optional>
 #include <regex>
+#include <string>
 
 using namespace std;
 
 // Gestor autos
-const size_t registrosAutos{25};
+// const size_t registrosAutos{25};
 const size_t columnasRegistro{7};
 bool eliminarAuto(const string &, const string);
 string generarCodigoUnico(const string, const string);
@@ -22,7 +25,7 @@ bool setAuto(const array<string, columnasRegistro> &, const string);
 const size_t filasCompetencias{7};
 const size_t columnasRegistroCompetencia{7};
 // bool eliminarCompetencia(const string, const string);
-string generarCodigoCompetencia();
+// string generarCodigoCompetencia();
 array<string, columnasRegistro> getCompetencia(const string, const string);
 bool setCompetencia(const array<string, columnasRegistro> &, const string);
 // string modificarCompetencia(const string, const string[]);
@@ -35,32 +38,26 @@ bool validarNombre(string);
 bool validarNumeroRango(const string &, const int, const int);
 bool validarSoloNumero(const string &);
 
+// Gestor General
+bool ingresarAutoAlInventario(const string);
+
 //? Formateador Salida
-string formatearSalidaDatosAuto(string[]);
+void formatearParaSalida(string &);
 string formatearSalidaDatosCompetencia(string[]);
 
 //? Formateador Entrada
-string formatearRegistro(const array<string, columnasRegistro> &);
+string convertirRegistroEnString(const array<string, columnasRegistro> &);
 // string formatearEntradaDatosCompetencia(string[]);
 
 int main()
 {
-    string direccionArchivoAutos = "Autos.txt";
-    string nuevoCodigo = generarCodigoUnico("A", direccionArchivoAutos);
 
-    if (!nuevoCodigo.empty())
-    {
-        cout << "Código generado: " << nuevoCodigo << endl;
-    }
-    else
-    {
-        cout << "No se pudo generar un código único." << endl;
-    }
-
+    string resultado = ingresarAutoAlInventario("Autos.txt") ? "Auto ingresado correctamente!" : "Error: El auto no se ingresó correctamente";
+    cout << resultado;
     return 0;
 }
 
-// Validador entradas definición
+// Validador entradas
 bool validarCodigoAuto(const string &codigo)
 {
     regex regexRule("A\\d{8}");
@@ -209,6 +206,11 @@ bool eliminarAuto(const string &codigo, const string direccionArchivo)
     }
 }
 
+void formatearParaSalida(string &dato)
+{
+    dato = "\"" + string(25 - dato.length(), ' ') + dato + "\"";
+}
+
 string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo)
 {
 
@@ -275,7 +277,7 @@ bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionAr
         cout << "El archivo se pudo abrir exitosamente!" << endl;
     }
 
-    string registroAuto = formatearRegistro(infoAuto);
+    string registroAuto = convertirRegistroEnString(infoAuto);
 
     appArchivoAutos << registroAuto;
     appArchivoAutos.close();
@@ -310,6 +312,7 @@ array<string, columnasRegistro> getAuto(const string codigo, const string direcc
     return array<string, columnasRegistro>{};
 }
 
+// Gestor competencias
 bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, string direccionArchivo)
 {
     ofstream appArchivoAutos(direccionArchivo, ios::app);
@@ -323,7 +326,7 @@ bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, stri
         cout << "El archivo se pudo abrir exitosamente!" << endl;
     }
 
-    string registroCompetencia = formatearRegistro(infoCompetencia);
+    string registroCompetencia = convertirRegistroEnString(infoCompetencia);
 
     appArchivoAutos << registroCompetencia;
     appArchivoAutos.close();
@@ -357,8 +360,193 @@ array<string, columnasRegistro> getCompetencia(const string codigo, const string
     return {""};
 }
 
+// Gestor general
+bool ingresarAutoAlInventario(const string direccioArchivo)
+{
+    string nombreAuto, codigo, equipoPropietario;
+    string velocidadMaxima, caballosFuerza;
+    string costoAuto, identificacionPropietario;
+    array<string, 7> datosAuto;
+    array<string, 7> registroAuto;
+
+    bool entradaCorrecta = false;
+
+    cout << "\n============================ \n";
+    cout << "INGRESAR AUTO A INVENTARIO \n";
+    cout << "============================ \n";
+
+    codigo = generarCodigoUnico("A", direccioArchivo);
+    cout << "Código de automóvil (generado automáticamente): " << codigo << endl;
+
+    do
+    {
+        cout << "Ingrese el nombre del automóvil (más de 25 caractéres serán omitidos): ";
+        cin.width(25);
+        getline(cin, nombreAuto);
+
+        cout << endl;
+        if (nombreAuto.empty())
+        {
+            cout << "Nombre inválido" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    entradaCorrecta = false;
+
+    do
+    {
+        cout << "Ingrese la velocidad máxima (km/h) del automóvil " << endl
+             << "(distinta de 0 & más de 3 cifras serán omitidas): ";
+        cin >> setw(4) >> velocidadMaxima;
+        cout << endl;
+        if (!(validarSoloNumero(velocidadMaxima)))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!(validarNumeroRango(velocidadMaxima, 999, 1)))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    entradaCorrecta = false;
+
+    do
+    {
+        cout << "Ingrese los caballos de fuerza(hp) del automóvil" << endl
+             << "(más de 3 cifras serán omitidas): ";
+        cin >> setw(4) >> caballosFuerza;
+
+        if (!(validarSoloNumero(caballosFuerza)))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!(validarNumeroRango(caballosFuerza, 999, 1)))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    entradaCorrecta = false;
+
+    do
+    {
+        cout << "Ingrese el Equipo/Propietario del automóvil" << endl
+             << " (más de 25 caractéres serán omitidos): ";
+        cin.width(25);
+        getline(cin, equipoPropietario);
+        cout << endl;
+        if (equipoPropietario.empty())
+        {
+            cout << "Nombre invalido" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    entradaCorrecta = false;
+
+    do
+    {
+        cout << "Ingrese el costo del automóvil" << endl
+             << "(Sin coma decimal, más de 8 cifras serán omitidas): ";
+        cin >> setw(9) >> costoAuto;
+        cout << endl;
+
+        if (!(validarSoloNumero(costoAuto)))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!(validarNumeroRango(costoAuto, 99999999, 1)))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    entradaCorrecta = false;
+
+    do
+    {
+        cout << "Ingrese el número de identificación de quien registra el automóvil" << endl
+             << "(más de 8 cifras serán omitidas): ";
+        cin >> setw(9) >> identificacionPropietario;
+        cout << endl;
+
+        if (!(validarSoloNumero(identificacionPropietario)))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!(validarNumeroRango(identificacionPropietario, 99999999, 1)))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+
+    } while (!entradaCorrecta);
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    formatearParaSalida(nombreAuto);
+    formatearParaSalida(equipoPropietario);
+
+    datosAuto = array<string, columnasRegistro>{codigo, nombreAuto, velocidadMaxima, caballosFuerza, equipoPropietario, costoAuto, identificacionPropietario};
+
+    if (setAuto(datosAuto, direccioArchivo))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 // Formateador Entrada?
-string formatearRegistro(const array<string, columnasRegistro> &infoAuto)
+string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto)
 {
     string registro;
     for (const string &campo : infoAuto)
