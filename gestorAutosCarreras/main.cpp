@@ -2,6 +2,7 @@
 #include <cctype>
 #include <fstream>
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <optional>
 #include <regex>
@@ -11,7 +12,7 @@ using namespace std;
 // Gestor autos
 const size_t registrosAutos{25};
 const size_t columnasRegistro{7};
-bool eliminarAuto(const string, const string);
+bool eliminarAuto(const string &, const string);
 string generarCodigoAuto();
 array<string, 7> getAuto(const string, const string);
 string modificarAuto(const array<array<char, 3>, 2> &);
@@ -24,7 +25,7 @@ const size_t columnasRegistroCompetencia{7};
 string generarCodigoCompetencia();
 array<string, columnasRegistro> getCompetencia(const string, const string);
 bool setCompetencia(const array<string, columnasRegistro> &, const string);
-string modificarCompetencia(const string, const string[]);
+// string modificarCompetencia(const string, const string[]);
 
 // Validador entradas
 bool validarCodigoAuto(const string &);
@@ -47,14 +48,12 @@ int main()
     string direccionArchivoAutos = "Autos.txt";
     string direccionArchivoCompetencias = "Competencias.txt";
 
-    array<string, 7> registroAuto = getCompetencia("Edreya", direccionArchivoAutos);
-    if (!registroAuto[0].empty())
-    {
-        cout << formatearRegistro(registroAuto) << endl;
-    }
-    else
+    bool autoEliminado = eliminarAuto("Edrey", direccionArchivoAutos);
 
-        system("pause");
+    cout << "El auto fue eliminado? " << autoEliminado << endl;
+
+    system("pause");
+    return false;
 }
 
 // Validador entradas definición
@@ -128,22 +127,44 @@ bool validarSoloNumero(const string &numero)
 }
 
 // Gestor autos
-bool eliminarAuto(const string codigo, const string direccionArchivo)
+bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
 {
-    array<string, 7> registroAuto;
+    for (auto &campo : registro)
+    {
+        if (!(inArchivo >> campo))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
+bool eliminarAuto(const string &codigo, const string direccionArchivo)
+{
     try
     {
         ifstream inArchivoAutos(direccionArchivo, ios::in);
-        ofstream outArchivoTemp("temp.txt", ios::out);
-        bool autoEncontrado = false;
+        if (!inArchivoAutos)
+        {
+            cout << "Error: No se pudo abrir el archivo" << direccionArchivo << endl;
+            throw direccionArchivo;
+        }
 
         cout << "El archivo se abrió correctamente" << endl;
-        while (inArchivoAutos >> registroAuto[0] >> registroAuto[1] >> registroAuto[2] >> registroAuto[3] >> registroAuto[4] >> registroAuto[5] >> registroAuto[6])
+
+        ofstream outArchivoTemp("temp.txt", ios::out);
+        array<string, columnasRegistro> registroAuto;
+
+        bool autoEncontrado = false;
+
+        while (leerRegistro(inArchivoAutos, registroAuto))
         {
             if (!(registroAuto[0] == codigo))
             {
-                outArchivoTemp << registroAuto[0] << registroAuto[1] << registroAuto[2] << registroAuto[3] << registroAuto[4] << registroAuto[5] << registroAuto[6];
+                for (size_t i = 0; i < registroAuto.size(); ++i)
+                {
+                    outArchivoTemp << registroAuto[i] << (i < registroAuto.size() - 1 ? " " : "\n");
+                }
             }
             else
             {
@@ -151,21 +172,36 @@ bool eliminarAuto(const string codigo, const string direccionArchivo)
             }
         }
 
+        outArchivoTemp.close();
+        inArchivoAutos.close();
+
         if (autoEncontrado)
         {
-            remove(direccionArchivo.c_str());
-            rename("temp.txt", direccionArchivo.c_str());
-            cout << "Registro eliminado correctamente" << endl;
+            if (remove(direccionArchivo.c_str()) != 0)
+            {
+                cerr << "Error al eliminar el archivo original: " << direccionArchivo << endl;
+                remove("temp.txt");
+                return false;
+            }
+
+            if (rename("temp.txt", direccionArchivo.c_str()) != 0)
+            {
+                cerr << "Error al renombrar el archivo temporal a: " << direccionArchivo << endl;
+                return false;
+            }
+            return true;
         }
         else
         {
-            remove("temp.txt");
             cout << "No se encontró el registro del auto " << codigo << endl;
+            remove("temp.txt");
+            return false;
         }
     }
     catch (const exception &e)
     {
-        cerr << "No se pudo abrir el archivo" << endl;
+        cerr << "No se pudo eliminar el archivo: " << e.what() << endl;
+        return false;
     }
 }
 
@@ -186,6 +222,7 @@ bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionAr
     string registroAuto = formatearRegistro(infoAuto);
 
     appArchivoAutos << registroAuto;
+    appArchivoAutos.close();
 
     return true;
 }
@@ -212,8 +249,9 @@ array<string, columnasRegistro> getAuto(const string codigo, const string direcc
             return registroAuto;
         }
     }
+    inArchivoAutos.close();
     cout << "Auto no encontrado!" << endl;
-    return {""};
+    return array<string, columnasRegistro>{};
 }
 
 // Gestor competencias
@@ -233,7 +271,7 @@ bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, stri
     string registroCompetencia = formatearRegistro(infoCompetencia);
 
     appArchivoAutos << registroCompetencia;
-
+    appArchivoAutos.close();
     return true;
 }
 
@@ -260,6 +298,7 @@ array<string, columnasRegistro> getCompetencia(const string codigo, const string
         }
     }
     cout << "Competencia no encontrada!" << endl;
+    inArchivoAutos.close();
     return {""};
 }
 
