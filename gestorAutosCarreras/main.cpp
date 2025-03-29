@@ -13,7 +13,7 @@ using namespace std;
 const size_t registrosAutos{25};
 const size_t columnasRegistro{7};
 bool eliminarAuto(const string &, const string);
-string generarCodigoAuto();
+string generarCodigoUnico(const string, const string);
 array<string, 7> getAuto(const string, const string);
 string modificarAuto(const array<array<char, 3>, 2> &);
 bool setAuto(const array<string, columnasRegistro> &, const string);
@@ -46,14 +46,18 @@ string formatearRegistro(const array<string, columnasRegistro> &);
 int main()
 {
     string direccionArchivoAutos = "Autos.txt";
-    string direccionArchivoCompetencias = "Competencias.txt";
+    string nuevoCodigo = generarCodigoUnico("A", direccionArchivoAutos);
 
-    bool autoEliminado = eliminarAuto("Edrey", direccionArchivoAutos);
+    if (!nuevoCodigo.empty())
+    {
+        cout << "Código generado: " << nuevoCodigo << endl;
+    }
+    else
+    {
+        cout << "No se pudo generar un código único." << endl;
+    }
 
-    cout << "El auto fue eliminado? " << autoEliminado << endl;
-
-    system("pause");
-    return false;
+    return 0;
 }
 
 // Validador entradas definición
@@ -205,6 +209,58 @@ bool eliminarAuto(const string &codigo, const string direccionArchivo)
     }
 }
 
+string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo)
+{
+
+    int numeroGenerado = 1;
+    const unsigned int maxNum = 99999999;
+    string codigo;
+    array<string, 7> camposRegistro;
+
+    fstream inArchivoAutos(direccionArchivo, ios::in);
+    if (!inArchivoAutos)
+    {
+        cerr << "No se pudo abrir el archivo. Generando el primer código." << endl;
+        return tipoCodigo + "00000001";
+    }
+
+    cout << "El archivo se abrió correctamente." << endl;
+
+    // Revisa si el archivo está vacío.
+    inArchivoAutos.seekg(0, ios::end);
+    if (inArchivoAutos.tellg() == 0)
+    {
+        inArchivoAutos.close();
+        return tipoCodigo + "00000001";
+    }
+
+    inArchivoAutos.seekg(0, ios::beg);
+
+    vector<string> codigosExistentes;
+
+    while (inArchivoAutos >> camposRegistro[0])
+    {
+        codigosExistentes.push_back(camposRegistro[0]);
+        inArchivoAutos.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    inArchivoAutos.close();
+
+    while (numeroGenerado <= maxNum)
+    {
+        codigo = tipoCodigo + string(8 - to_string(numeroGenerado).length(), '0') + to_string(numeroGenerado);
+
+        if (find(codigosExistentes.begin(), codigosExistentes.end(), codigo) == codigosExistentes.end())
+        {
+            return codigo;
+        }
+        numeroGenerado++;
+    }
+
+    cerr << "No se pudo generar un código único. Se alcanzó el límite máximo." << endl;
+    return "";
+}
+
 bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionArchivo)
 {
 
@@ -254,7 +310,6 @@ array<string, columnasRegistro> getAuto(const string codigo, const string direcc
     return array<string, columnasRegistro>{};
 }
 
-// Gestor competencias
 bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, string direccionArchivo)
 {
     ofstream appArchivoAutos(direccionArchivo, ios::app);
