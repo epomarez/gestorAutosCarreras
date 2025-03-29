@@ -48,7 +48,7 @@ string formatearSalidaDatosCompetencia(string[]);
 //? Formateador Entrada
 string convertirRegistroEnString(const array<string, columnasRegistro> &);
 // string formatearEntradaDatosCompetencia(string[]);
-
+//* Funcion main
 int main()
 {
 
@@ -279,7 +279,7 @@ bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionAr
 
     string registroAuto = convertirRegistroEnString(infoAuto);
 
-    appArchivoAutos << registroAuto;
+    appArchivoAutos << registroAuto << endl;
     appArchivoAutos.close();
 
     return true;
@@ -315,8 +315,8 @@ array<string, columnasRegistro> getAuto(const string codigo, const string direcc
 // Gestor competencias
 bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, string direccionArchivo)
 {
-    ofstream appArchivoAutos(direccionArchivo, ios::app);
-    if (!appArchivoAutos)
+    ofstream appArchivoCompetencias(direccionArchivo, ios::app);
+    if (!appArchivoCompetencias)
     {
         cout << "Hubo un error, no se pudo abrir el archivo!" << endl;
         return false;
@@ -328,8 +328,8 @@ bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, stri
 
     string registroCompetencia = convertirRegistroEnString(infoCompetencia);
 
-    appArchivoAutos << registroCompetencia;
-    appArchivoAutos.close();
+    appArchivoCompetencias << registroCompetencia << endl;
+    appArchivoCompetencias.close();
     return true;
 }
 
