@@ -20,6 +20,7 @@ bool eliminarRegistroAuto(const string &, const string &);
 bool confirmarEliminacionAuto();
 string generarCodigoUnico(const string, const string);
 array<string, columnasRegistro> getAuto(const string, const string);
+void imprimirDatosAuto(const array<string, columnasRegistro> &);
 string modificarAuto(const array<array<char, 3>, 2> &);
 bool setAuto(const array<string, columnasRegistro> &, const string);
 string solicitarCodigoAuto();
@@ -41,6 +42,8 @@ bool validarNombre(string);
 bool validarNumeroRango(const string &, const int, const int);
 bool validarSoloNumero(const string &);
 
+bool confirmarAccion(const string &);
+bool solicitarNumero(const string &, const short, string &, int, int);
 // Gestor General
 //! Debe confirmar ingreso antes de escribir en archivo.
 bool ingresarAutoAlInventario(const string);
@@ -200,6 +203,63 @@ bool validarSoloNumero(const string &numero)
     return true;
 }
 
+bool confirmarAccion(const string &mensaje)
+{
+    string seleccionUsuario;
+    bool entradaCorrecta = false;
+
+    do
+    {
+        cout << mensaje << " (y/n): ";
+        cin >> seleccionUsuario;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (seleccionUsuario == "Y" || seleccionUsuario == "y")
+        {
+            return true;
+        }
+        else if (seleccionUsuario == "N" || seleccionUsuario == "n")
+        {
+            return false;
+        }
+        else
+        {
+            cerr << "Error: Respuesta inválida\n";
+            entradaCorrecta = false;
+        }
+    } while (!entradaCorrecta);
+
+    return false;
+}
+
+bool solicitarNumero(const string &mensaje, const short anchoCampo, string &numero, int max, int min)
+{
+    bool entradaCorrecta = false;
+    do
+    {
+        cout << mensaje;
+        cin >> setw(anchoCampo) >> numero;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (!validarSoloNumero(numero))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarNumeroRango(numero, max, min))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    return true;
+}
 // Gestor autos
 bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
 {
@@ -212,39 +272,10 @@ bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
     }
     return true;
 }
+
 void eliminarAuto(const string &direccionArchivo)
 {
     eliminarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
-}
-bool confirmarEliminacionAuto()
-{
-    string seleccionUsuario;
-    bool entradaCorrecta, deseaEliminar;
-
-    do
-    {
-        cout << "¿Está seguro de que desea eliminar este auto? (y/n) " << endl;
-        cin >> seleccionUsuario;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        if (seleccionUsuario == "Y" || seleccionUsuario == "y")
-        {
-            deseaEliminar = true;
-            entradaCorrecta = true;
-        }
-        else if (seleccionUsuario == "N" || seleccionUsuario == "n")
-        {
-            cerr << "El proceso de eliminación fue cancelado por el usuario." << endl;
-            deseaEliminar = false;
-            entradaCorrecta = true;
-        }
-        else
-        {
-            cerr << "Error: Respuesta invalida\n";
-            entradaCorrecta = false;
-        }
-
-    } while (!entradaCorrecta);
-    return deseaEliminar ? true : false;
 }
 
 string solicitarCodigoAuto()
@@ -313,13 +344,7 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
                      << "Datos del auto a eliminar \n"
                      << "============================ \n";
 
-                cout << "Código Auto: " << registroAuto[0] << endl
-                     << "Nombre del Auto: " << registroAuto[1] << endl
-                     << "Velocidad Máxima: " << registroAuto[2] << endl
-                     << "Caballos de fuerza: " << registroAuto[3] << "HP" << endl
-                     << "Equipo/Propietario: " << registroAuto[4] << endl
-                     << "Costo del auto: " << registroAuto[5] << " USD" << endl
-                     << "Numero de identificación del registrador: " << registroAuto[6] << endl;
+                imprimirDatosAuto(registroAuto);
             }
         }
 
@@ -331,8 +356,9 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
 
         if (autoEncontrado)
         {
-            if (!confirmarEliminacionAuto())
+            if (!confirmarAccion("¿Está seguro de que desea eliminar este auto?"))
             {
+                cout << "Eliminación cancelada por el usuario" << endl;
                 return false;
             }
             else
@@ -367,6 +393,20 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
         cerr << "No se pudo eliminar el archivo: " << e.what() << endl;
         return false;
     }
+}
+
+void imprimirDatosAuto(const array<string, columnasRegistro> &registroAuto)
+{
+    cout << "\n============================ \n";
+    cout << "Datos del auto encontrado \n";
+    cout << "============================ \n";
+    cout << "Código Auto: " << registroAuto[0] << endl;
+    cout << "Nombre del Auto: " << registroAuto[1] << endl;
+    cout << "Velocidad Máxima: " << registroAuto[2] << " km/h" << endl;
+    cout << "Caballos de fuerza: " << registroAuto[3] << " HP" << endl;
+    cout << "Equipo/Propietario: " << registroAuto[4] << endl;
+    cout << "Costo del auto: " << registroAuto[5] << " USD" << endl;
+    cout << "Número de identificación del registrador: " << registroAuto[6] << endl;
 }
 
 void formatearParaSalida(string &dato)
@@ -561,54 +601,17 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
 
     entradaCorrecta = false;
 
-    do
-    {
-        cout << "Ingrese la velocidad máxima (km/h) del automóvil " << endl
-             << "(distinta de 0 & más de 3 cifras serán omitidas): ";
-        cin >> setw(4) >> velocidadMaxima;
-        cout << endl;
-        if (!(validarSoloNumero(velocidadMaxima)))
-        {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
-            entradaCorrecta = false;
-        }
-        else if (!(validarNumeroRango(velocidadMaxima, 999, 1)))
-        {
-            cerr << "El dato que ingresaste está fuera del rango" << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-    } while (!entradaCorrecta);
+    string mensaje = "Ingrese la velocidad máxima (km/h) del automóvil ";
+    mensaje += "\n (igual a 0 & más de 3 cifras serán omitidas): ";
+    entradaCorrecta = solicitarNumero(mensaje, 4, identificacionPropietario, 999, 1);
 
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
-    do
-    {
-        cout << "Ingrese los caballos de fuerza(hp) del automóvil" << endl
-             << "(más de 3 cifras serán omitidas): ";
-        cin >> setw(4) >> caballosFuerza;
-
-        if (!(validarSoloNumero(caballosFuerza)))
-        {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
-            entradaCorrecta = false;
-        }
-        else if (!(validarNumeroRango(caballosFuerza, 999, 1)))
-        {
-            cerr << "El dato que ingresaste está fuera del rango" << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-
-    } while (!entradaCorrecta);
+    string mensaje = "Ingrese los caballos de fuerza(hp) del automóvil";
+    mensaje += "\n (más de 3 cifras serán omitidas): ";
+    entradaCorrecta = solicitarNumero(mensaje, 4, identificacionPropietario, 999, 1);
 
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -634,57 +637,17 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
 
     entradaCorrecta = false;
 
-    do
-    {
-        cout << "Ingrese el costo del automóvil" << endl
-             << "(Sin coma decimal, más de 8 cifras serán omitidas): ";
-        cin >> setw(9) >> costoAuto;
-        cout << endl;
-
-        if (!(validarSoloNumero(costoAuto)))
-        {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
-            entradaCorrecta = false;
-        }
-        else if (!(validarNumeroRango(costoAuto, 99999999, 1)))
-        {
-            cerr << "El dato que ingresaste está fuera del rango" << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-
-    } while (!entradaCorrecta);
+    string mensaje = "Ingrese el costo del automóvil";
+    mensaje += "\n (Sin coma decimal, más de 8 cifras serán omitidas): ";
+    entradaCorrecta = solicitarNumero(mensaje, 9, identificacionPropietario, 99999999, 1);
 
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
-    do
-    {
-        cout << "Ingrese el número de identificación de quien registra el automóvil" << endl
-             << "(más de 8 cifras serán omitidas): ";
-        cin >> setw(9) >> identificacionPropietario;
-        cout << endl;
-
-        if (!(validarSoloNumero(identificacionPropietario)))
-        {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
-            entradaCorrecta = false;
-        }
-        else if (!(validarNumeroRango(identificacionPropietario, 99999999, 1)))
-        {
-            cerr << "El dato que ingresaste está fuera del rango" << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-
-    } while (!entradaCorrecta);
+    string mensaje = "Ingrese el número de identificación de quien registra el automóvil";
+    mensaje += "\n (más de 8 cifras serán omitidas): ";
+    entradaCorrecta = solicitarNumero(mensaje, 9, identificacionPropietario, 99999999, 1);
 
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -735,49 +698,14 @@ void consultarAutoInventario(const string direccionArchivo)
             array<string, columnasRegistro> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
             if (!contenidoAuto.empty())
             {
-                cout << "\n============================ \n";
-                cout << "Datos del auto encontrado \n";
-                cout << "============================ \n";
-
-                cout << "Código Auto: " << contenidoAuto[0] << endl;
-                cout << "Nombre del Auto: " << contenidoAuto[1] << endl;
-                cout << "Velocidad Máxima: " << contenidoAuto[2] << endl;
-                cout << "Caballos de fuerza: " << contenidoAuto[3] << "HP" << endl;
-                cout << "Equipo/Propietario: " << contenidoAuto[4] << endl;
-                cout << "Costo del auto: " << contenidoAuto[5] << "USD" << endl;
-                cout << "Numero de identificación del registrador: " << contenidoAuto[6] << endl;
+                imprimirDatosAuto(contenidoAuto);
             }
             else
             {
                 cerr << "Error: El auto no se ha encontrado" << endl;
             }
 
-            string seleccionUsuario;
-
-            entradaCorrecta = false;
-            do
-            {
-                cout << "Desea volver al menu principal? (y/n) " << endl;
-                cin.width(9);
-                getline(cin, seleccionUsuario);
-
-                cout << endl;
-                if (seleccionUsuario == "Y" || seleccionUsuario == "y")
-                {
-                    deseaSalir = true;
-                    entradaCorrecta = true;
-                }
-                else if (seleccionUsuario == "N" || seleccionUsuario == "n")
-                {
-                    deseaSalir = false;
-                    entradaCorrecta = true;
-                }
-                else
-                {
-                    cerr << "Error: Respuesta invalida";
-                    entradaCorrecta = false;
-                }
-            } while (!entradaCorrecta);
+            deseaSalir = confirmarAccion("¿Desea volver al menu principal?");
         }
     } while (!deseaSalir);
 }
