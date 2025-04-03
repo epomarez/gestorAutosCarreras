@@ -39,7 +39,9 @@ bool validarNumeroRango(const string &, const int, const int);
 bool validarSoloNumero(const string &);
 
 // Gestor General
+//! Debe confirmar ingreso antes de escribir en archivo.
 bool ingresarAutoAlInventario(const string);
+void consultarAutoInventario(const string);
 
 //? Formateador Salida
 void formatearParaSalida(string &);
@@ -51,7 +53,75 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &);
 //* Funcion main
 int main()
 {
+    const string direccionArchivo = "Autos.txt";
+    int seleccionMenu = 0;
+    bool salir = false;
 
+    string menuInicio = "\n\n************************************\n"
+                        "Inventario de Autos.\n"
+                        "1. Ingresar auto al inventario.\n"
+                        "2. Consultar auto del inventario.\n"
+                        "3. Modificar auto del inventario.\n"
+                        "4. Eliminar auto del inventario\n"
+                        "5. Salir de inventario de autos.\n"
+                        "Seleccione una opcion: ";
+
+    do
+    {
+        cout << menuInicio;
+        cin >> seleccionMenu;
+
+        if (!cin.good())
+        {
+            cout << "Sólo se permite el ingreso de números" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else
+        {
+            switch (seleccionMenu)
+            {
+            case 1:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                ingresarAutoAlInventario(direccionArchivo);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
+
+            case 2:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                consultarAutoInventario(direccionArchivo);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
+
+                // case 3:
+                //     mostrarEquipoPokemon(equipoPokemon, nombresPokemones, tipoPokemones, cantidadPokemones);
+                //     cout << "Presione Enter para continuar...";
+                //     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                //     cin.get();
+                //     break;
+
+                // case 4:
+                //     mostrarPokemonMasFuerte(equipoPokemon, nombresPokemones, tipoPokemones, cantidadPokemones);
+                //     cout << "Presione Enter para continuar...";
+                //     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                //     cin.get();
+                //     break;
+
+            case 5:
+                salir = true;
+                break;
+            default:
+                cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
+                cout << "Presione Enter para continuar...";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+                break;
+            }
+        }
+
+    } while (!salir);
     string resultado = ingresarAutoAlInventario("Autos.txt") ? "Auto ingresado correctamente!" : "Error: El auto no se ingresó correctamente";
     cout << resultado;
     return 0;
@@ -208,7 +278,7 @@ bool eliminarAuto(const string &codigo, const string direccionArchivo)
 
 void formatearParaSalida(string &dato)
 {
-    dato = "\"" + string(25 - dato.length(), ' ') + dato + "\"";
+    dato = "\"" + dato + string(25 - dato.length(), ' ') + "\"";
 }
 
 string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo)
@@ -299,7 +369,7 @@ array<string, columnasRegistro> getAuto(const string codigo, const string direcc
         cout << "El archivo se abrió correctamente" << endl;
     }
 
-    while (inArchivoAutos >> registroAuto[0] >> registroAuto[1] >> registroAuto[2] >> registroAuto[3] >> registroAuto[4] >> registroAuto[5] >> registroAuto[6])
+    while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
     {
         if (registroAuto[0] == codigo)
         {
@@ -545,6 +615,83 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     }
 }
 
+void consultarAutoInventario(const string direccionArchivo)
+{
+    string codigoAuto = "";
+
+    bool deseaSalir = false;
+    cout << "\n============================ \n";
+    cout << "Consultar auto del inventario \n";
+    cout << "============================ \n";
+    do
+    {
+        bool entradaCorrecta = false;
+        cout << "Ingrese el código del automóvil (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto);
+
+        cout << endl;
+        if (codigoAuto.empty())
+        {
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarCodigoAuto(codigoAuto))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            array<string, 7> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
+            if (!contenidoAuto.empty())
+            {
+                cout << "\n============================ \n";
+                cout << "Datos del auto encontrado \n";
+                cout << "============================ \n";
+
+                cout << "Código Auto: " << contenidoAuto[0] << endl;
+                cout << "Nombre del Auto: " << contenidoAuto[1] << endl;
+                cout << "Velocidad Máxima: " << contenidoAuto[2] << endl;
+                cout << "Caballos de fuerza: " << contenidoAuto[3] << "HP" << endl;
+                cout << "Equipo/Propietario: " << contenidoAuto[4] << endl;
+                cout << "Costo del auto: " << contenidoAuto[5] << "USD" << endl;
+                cout << "Numero de identificación del registrador: " << contenidoAuto[6] << endl;
+            }
+            else
+            {
+                cerr << "Error: El auto no se ha encontrado" << endl;
+            }
+
+            string seleccionUsuario;
+
+            entradaCorrecta = false;
+            do
+            {
+                cout << "Desea volver al menu principal? (y/n) " << endl;
+                cin.width(9);
+                getline(cin, seleccionUsuario);
+
+                cout << endl;
+                if (seleccionUsuario == "Y" || seleccionUsuario == "y")
+                {
+                    deseaSalir = true;
+                    entradaCorrecta = true;
+                }
+                else if (seleccionUsuario == "N" || seleccionUsuario == "n")
+                {
+                    deseaSalir = false;
+                    entradaCorrecta = true;
+                }
+                else
+                {
+                    cerr << "Error: Respuesta invalida";
+                    entradaCorrecta = false;
+                }
+            } while (!entradaCorrecta);
+        }
+    } while (!deseaSalir);
+}
 // Formateador Entrada?
 string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto)
 {
