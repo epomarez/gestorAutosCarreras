@@ -15,11 +15,14 @@ using namespace std;
 // Gestor autos
 // const size_t registrosAutos{25};
 const size_t columnasRegistro{7};
-bool eliminarAuto(const string &, const string);
+void eliminarAuto(const string &);
+bool eliminarRegistroAuto(const string &, const string &);
+bool confirmarEliminacionAuto();
 string generarCodigoUnico(const string, const string);
-array<string, 7> getAuto(const string, const string);
+array<string, columnasRegistro> getAuto(const string, const string);
 string modificarAuto(const array<array<char, 3>, 2> &);
 bool setAuto(const array<string, columnasRegistro> &, const string);
+string solicitarCodigoAuto();
 
 // Gestor competencias
 const size_t filasCompetencias{7};
@@ -102,12 +105,12 @@ int main()
                 //     cin.get();
                 //     break;
 
-                // case 4:
-                //     mostrarPokemonMasFuerte(equipoPokemon, nombresPokemones, tipoPokemones, cantidadPokemones);
-                //     cout << "Presione Enter para continuar...";
-                //     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                //     cin.get();
-                //     break;
+            case 4:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                eliminarAuto(direccionArchivo);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
 
             case 5:
                 salir = true;
@@ -200,7 +203,7 @@ bool validarSoloNumero(const string &numero)
 // Gestor autos
 bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
 {
-    for (auto &campo : registro)
+    for (string &campo : registro)
     {
         if (!(inArchivo >> campo))
         {
@@ -209,16 +212,80 @@ bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
     }
     return true;
 }
+void eliminarAuto(const string &direccionArchivo)
+{
+    eliminarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
+}
+bool confirmarEliminacionAuto()
+{
+    string seleccionUsuario;
+    bool entradaCorrecta, deseaEliminar;
 
-bool eliminarAuto(const string &codigo, const string direccionArchivo)
+    do
+    {
+        cout << "¿Está seguro de que desea eliminar este auto? (y/n) " << endl;
+        cin >> seleccionUsuario;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (seleccionUsuario == "Y" || seleccionUsuario == "y")
+        {
+            deseaEliminar = true;
+            entradaCorrecta = true;
+        }
+        else if (seleccionUsuario == "N" || seleccionUsuario == "n")
+        {
+            cerr << "El proceso de eliminación fue cancelado por el usuario." << endl;
+            deseaEliminar = false;
+            entradaCorrecta = true;
+        }
+        else
+        {
+            cerr << "Error: Respuesta invalida\n";
+            entradaCorrecta = false;
+        }
+
+    } while (!entradaCorrecta);
+    return deseaEliminar ? true : false;
+}
+
+string solicitarCodigoAuto()
+{
+    string codigoAuto;
+    bool entradaCorrecta = false;
+    do
+    {
+        cout << "Ingrese el código del automóvil (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto);
+
+        cout << endl;
+        if (codigoAuto.empty())
+        {
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarCodigoAuto(codigoAuto))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    return codigoAuto;
+}
+
+bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
 {
     try
     {
         ifstream inArchivoAutos(direccionArchivo, ios::in);
         if (!inArchivoAutos)
         {
-            cout << "Error: No se pudo abrir el archivo" << direccionArchivo << endl;
-            throw direccionArchivo;
+            cout << "Error: No se pudo abrir el archivo " << direccionArchivo << endl;
+            throw runtime_error("Error al abrir el archivo: " + direccionArchivo);
         }
 
         cout << "El archivo se abrió correctamente" << endl;
@@ -227,27 +294,50 @@ bool eliminarAuto(const string &codigo, const string direccionArchivo)
         array<string, columnasRegistro> registroAuto;
 
         bool autoEncontrado = false;
+        streampos direccionRegistroEncontrado;
 
-        while (leerRegistro(inArchivoAutos, registroAuto))
+        while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
         {
-            if (!(registroAuto[0] == codigo))
+            if (registroAuto[0].empty() || !(registroAuto[0] == codigo))
             {
-                for (size_t i = 0; i < registroAuto.size(); ++i)
-                {
-                    outArchivoTemp << registroAuto[i] << (i < registroAuto.size() - 1 ? " " : "\n");
-                }
+
+                outArchivoTemp << registroAuto[0] << " " << quoted(registroAuto[1]) << " "
+                               << registroAuto[2] << " " << registroAuto[3] << " "
+                               << quoted(registroAuto[4]) << " " << registroAuto[5] << " "
+                               << registroAuto[6] << endl;
             }
             else
             {
                 autoEncontrado = true;
+                cout << "\n============================ \n"
+                     << "Datos del auto a eliminar \n"
+                     << "============================ \n";
+
+                cout << "Código Auto: " << registroAuto[0] << endl
+                     << "Nombre del Auto: " << registroAuto[1] << endl
+                     << "Velocidad Máxima: " << registroAuto[2] << endl
+                     << "Caballos de fuerza: " << registroAuto[3] << "HP" << endl
+                     << "Equipo/Propietario: " << registroAuto[4] << endl
+                     << "Costo del auto: " << registroAuto[5] << " USD" << endl
+                     << "Numero de identificación del registrador: " << registroAuto[6] << endl;
             }
         }
 
         outArchivoTemp.close();
         inArchivoAutos.close();
 
+        string seleccionUsuario;
+        bool deseaEliminar, entradaCorrecta;
+
         if (autoEncontrado)
         {
+            if (!confirmarEliminacionAuto())
+            {
+                return false;
+            }
+            else
+            {
+            }
             if (remove(direccionArchivo.c_str()) != 0)
             {
                 cerr << "Error al eliminar el archivo original: " << direccionArchivo << endl;
@@ -260,6 +350,9 @@ bool eliminarAuto(const string &codigo, const string direccionArchivo)
                 cerr << "Error al renombrar el archivo temporal a: " << direccionArchivo << endl;
                 return false;
             }
+            cout << "\n============================ \n"
+                 << "El auto se ha eliminado correctamente! \n"
+                 << "============================ \n";
             return true;
         }
         else
@@ -287,7 +380,7 @@ string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo
     int numeroGenerado = 1;
     const unsigned int maxNum = 99999999;
     string codigo;
-    array<string, 7> camposRegistro;
+    array<string, columnasRegistro> camposRegistro;
 
     fstream inArchivoAutos(direccionArchivo, ios::in);
     if (!inArchivoAutos)
@@ -357,7 +450,7 @@ bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionAr
 
 array<string, columnasRegistro> getAuto(const string codigo, const string direccionArchivo)
 {
-    array<string, 7> registroAuto;
+    array<string, columnasRegistro> registroAuto;
 
     fstream inArchivoAutos(direccionArchivo, ios::in);
     if (!inArchivoAutos)
@@ -436,7 +529,7 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     string nombreAuto, codigo, equipoPropietario;
     string velocidadMaxima, caballosFuerza;
     string costoAuto, identificacionPropietario;
-    array<string, 7> datosAuto;
+    array<string, columnasRegistro> datosAuto;
     array<string, 7> registroAuto;
 
     bool entradaCorrecta = false;
@@ -466,8 +559,6 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
         }
     } while (!entradaCorrecta);
 
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
     do
@@ -541,8 +632,6 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
         }
     } while (!entradaCorrecta);
 
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
     do
@@ -643,7 +732,7 @@ void consultarAutoInventario(const string direccionArchivo)
         }
         else
         {
-            array<string, 7> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
+            array<string, columnasRegistro> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
             if (!contenidoAuto.empty())
             {
                 cout << "\n============================ \n";
