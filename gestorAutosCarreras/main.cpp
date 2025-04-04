@@ -1,3 +1,11 @@
+// TODO: Al ingresar y solicitar valores numéricos no debo presionar Enter dos veces.
+// TODO: Los datos numéricos no son registrados, excepto la identificación.
+// TODO: Al ingresar, e ingresar texto con tilde, aparece como null en el .txt.
+// TODO: Al modificar el auto, no muestra su nueva información, sino del último auto.
+// TODO: El ingresar carácteres en el menú, no espera tecla para continuar
+// TODO: La opción para salir del inventario no está configurada propiamente.
+// TODO: Falta la funcionalidad de competencias.
+// TODO: El menú de autos es sólo un submenu de otro principal.
 #include <array>
 #include <algorithm>
 #include <cctype>
@@ -21,7 +29,7 @@ bool confirmarEliminacionAuto();
 string generarCodigoUnico(const string, const string);
 array<string, columnasRegistro> getAuto(const string, const string);
 void imprimirDatosAuto(const array<string, columnasRegistro> &);
-string modificarAuto(const array<array<char, 3>, 2> &);
+void modificarRegistroAuto(const string &, const string &);
 bool setAuto(const array<string, columnasRegistro> &, const string);
 string solicitarCodigoAuto();
 
@@ -101,12 +109,12 @@ int main()
                 cin.get();
                 break;
 
-                // case 3:
-                //     mostrarEquipoPokemon(equipoPokemon, nombresPokemones, tipoPokemones, cantidadPokemones);
-                //     cout << "Presione Enter para continuar...";
-                //     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                //     cin.get();
-                //     break;
+            case 3:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                modificarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
 
             case 4:
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -257,6 +265,8 @@ bool solicitarNumero(const string &mensaje, const short anchoCampo, string &nume
             entradaCorrecta = true;
         }
     } while (!entradaCorrecta);
+
+    numero = std::string((anchoCampo - 1) - numero.length(), '0') + numero;
 
     return true;
 }
@@ -466,6 +476,119 @@ string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo
     return "";
 }
 
+void modificarAuto(const string &direccionArchivo)
+{
+    bool deseaSalir = false;
+    do
+    {
+        modificarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
+        confirmarAccion("¿Desea volver al menú principal?");
+    } while (deseaSalir);
+}
+
+void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
+{
+    try
+    {
+        ifstream inArchivoAutos(direccionArchivo, ios::in);
+        if (!inArchivoAutos)
+        {
+            cout << "Error: No se pudo abrir el archivo " << direccionArchivo << endl;
+            throw runtime_error("Error al abrir el archivo: " + direccionArchivo);
+        }
+
+        cout << "El archivo se abrió correctamente" << endl;
+
+        ofstream outArchivoTemp("temp.txt", ios::out);
+        array<string, columnasRegistro> registroAuto;
+
+        bool autoEncontrado = false;
+        streampos direccionRegistroEncontrado;
+
+        while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
+        {
+            if (registroAuto[0].empty() || !(registroAuto[0] == codigo))
+            {
+                outArchivoTemp << registroAuto[0] << " " << quoted(registroAuto[1]) << " "
+                               << registroAuto[2] << " " << registroAuto[3] << " "
+                               << quoted(registroAuto[4]) << " " << registroAuto[5] << " "
+                               << registroAuto[6] << endl;
+            }
+            else if (registroAuto[0] == codigo)
+            {
+                autoEncontrado = true;
+                cout << "\n============================ \n"
+                     << "Datos del auto a modificar \n"
+                     << "============================ \n";
+
+                imprimirDatosAuto(registroAuto);
+                bool entradaCorrecta = false;
+                string velocidadMaxima, caballosFuerza;
+
+                string mensaje = "Ingrese la velocidad máxima (km/h) del automóvil ";
+                mensaje += "\n (igual a 0 & más de 3 cifras serán omitidas): ";
+                entradaCorrecta = solicitarNumero(mensaje, 4, velocidadMaxima, 999, 1);
+
+                cin.clear();
+
+                mensaje = "Ingrese los caballos de fuerza(hp) del automóvil";
+                mensaje += "\n (más de 3 cifras serán omitidas): ";
+                entradaCorrecta = solicitarNumero(mensaje, 4, caballosFuerza, 999, 1);
+
+                cin.clear();
+
+                outArchivoTemp << registroAuto[0] << " " << quoted(registroAuto[1]) << " "
+                               << velocidadMaxima << " " << caballosFuerza << " "
+                               << quoted(registroAuto[4]) << " " << registroAuto[5] << " "
+                               << registroAuto[6] << endl;
+            }
+        }
+
+        outArchivoTemp.close();
+        inArchivoAutos.close();
+
+        string seleccionUsuario;
+        bool deseaEliminar, entradaCorrecta;
+
+        if (autoEncontrado)
+        {
+            if (!confirmarAccion("¿Está seguro de que deesea modificar la velocidad máxima y los caballos de fuerza?"))
+            {
+                cout << "Modificción cancelada por el usuario" << endl;
+                return;
+            }
+            else if (remove(direccionArchivo.c_str()) != 0)
+            {
+                cerr << "Error al eliminar el archivo original: " << direccionArchivo << endl;
+                remove("temp.txt");
+                return;
+            }
+
+            if (rename("temp.txt", direccionArchivo.c_str()) != 0)
+            {
+                cerr << "Error al renombrar el archivo temporal a: " << direccionArchivo << endl;
+                return;
+            }
+            cout << "\n============================ \n"
+                 << "El auto se ha modificado correctamente en: " << direccionArchivo << " \n"
+                 << "============================ \n";
+            cout << convertirRegistroEnString(registroAuto) << endl;
+            return;
+        }
+        else
+        {
+            cout << "No se encontró el registro del auto " << codigo << endl;
+            remove("temp.txt");
+            return;
+        }
+    }
+    catch (const exception &e)
+    {
+        cerr << "No se pudo eliminar el archivo: " << e.what() << endl;
+        return;
+    }
+}
+
 bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionArchivo)
 {
 
@@ -609,7 +732,7 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
-    string mensaje = "Ingrese los caballos de fuerza(hp) del automóvil";
+    mensaje = "Ingrese los caballos de fuerza(hp) del automóvil";
     mensaje += "\n (más de 3 cifras serán omitidas): ";
     entradaCorrecta = solicitarNumero(mensaje, 4, identificacionPropietario, 999, 1);
 
@@ -637,7 +760,7 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
 
     entradaCorrecta = false;
 
-    string mensaje = "Ingrese el costo del automóvil";
+    mensaje = "Ingrese el costo del automóvil";
     mensaje += "\n (Sin coma decimal, más de 8 cifras serán omitidas): ";
     entradaCorrecta = solicitarNumero(mensaje, 9, identificacionPropietario, 99999999, 1);
 
@@ -645,7 +768,7 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     entradaCorrecta = false;
 
-    string mensaje = "Ingrese el número de identificación de quien registra el automóvil";
+    mensaje = "Ingrese el número de identificación de quien registra el automóvil";
     mensaje += "\n (más de 8 cifras serán omitidas): ";
     entradaCorrecta = solicitarNumero(mensaje, 9, identificacionPropietario, 99999999, 1);
 
