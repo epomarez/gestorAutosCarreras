@@ -18,10 +18,9 @@ using namespace std;
 
 // Gestor autos
 const size_t columnasRegistro{7};
+bool confirmarEliminacionAuto();
 void eliminarAuto(const string &);
 bool eliminarRegistroAuto(const string &, const string &);
-bool confirmarEliminacionAuto();
-string generarCodigoUnico(const string, const string);
 array<string, columnasRegistro> getAuto(const string, const string);
 void imprimirDatosAuto(const array<string, columnasRegistro> &);
 void modificarRegistroAuto(const string &, const string &);
@@ -29,11 +28,9 @@ bool setAuto(const array<string, columnasRegistro> &, const string);
 string solicitarCodigoAuto();
 
 // Gestor competencias
-const size_t filasCompetencias{7};
 const size_t columnasRegistroCompetencia{7};
-// string generarCodigoCompetencia();
 array<string, columnasRegistro> getCompetencia(const string, const string);
-bool setCompetencia(const array<string, columnasRegistro> &, const string);
+bool setCompetencia(const array<string, columnasRegistroCompetencia> &, const string);
 
 // Validador entradas
 bool validarCodigoAuto(const string &);
@@ -43,13 +40,14 @@ bool validarNombre(string);
 bool validarNumeroRango(const string &, const int, const int);
 bool validarSoloNumero(const string &);
 
-bool confirmarAccion(const string &);
-bool solicitarNumero(const string &, const short, string &, int, int);
 // Gestor General
 //! Debe confirmar ingreso antes de escribir en archivo.
-bool ingresarAutoAlInventario(const string);
+bool confirmarAccion(const string &);
 void consultarAutoInventario(const string);
+string generarCodigoUnico(const string, const string);
+bool ingresarAutoAlInventario(const string);
 void menuInventarioAutos(const string);
+bool solicitarNumero(const string &, const short, string &, int, int);
 
 //? Formateador Salida
 void formatearParaSalida(string &);
@@ -57,6 +55,7 @@ string formatearSalidaDatosCompetencia(string[]);
 
 //? Formateador Entrada
 string convertirRegistroEnString(const array<string, columnasRegistro> &);
+
 //* Funcion main
 int main()
 {
@@ -65,179 +64,11 @@ int main()
     return 0;
 }
 
-// Validador entradas
-bool validarCodigoAuto(const string &codigo)
-{
-    regex regexRule("A\\d{8}");
-
-    if (!regex_match(codigo, regexRule))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool validarCodigoCompetencia(const string &codigo)
-{
-    regex regexRule("C\\d{8}");
-
-    if (!regex_match(codigo, regexRule))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool validarFormatoFecha(const string &fecha)
-{
-    regex regexRule("(\\d{2})[/](\\d{2})[/](\\d{4})");
-
-    if (!regex_match(fecha, regexRule))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool validarNombre(const string nombre)
-{
-    if (nombre.length() > 25)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool validarNumeroRango(const string &numero, const int max, const int min)
-{
-    int num = stoi(numero);
-    if (num > max || num < min)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool validarSoloNumero(const string &numero)
-{
-
-    for (char c : numero)
-    {
-        if (!isdigit(c))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool confirmarAccion(const string &mensaje)
-{
-    string seleccionUsuario;
-    bool entradaCorrecta = false;
-
-    do
-    {
-        cout << mensaje << " (y/n): ";
-        cin >> seleccionUsuario;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        if (seleccionUsuario == "Y" || seleccionUsuario == "y")
-        {
-            return true;
-        }
-        else if (seleccionUsuario == "N" || seleccionUsuario == "n")
-        {
-            return false;
-        }
-        else
-        {
-            cerr << "Error: Respuesta inválida\n";
-            entradaCorrecta = false;
-        }
-    } while (!entradaCorrecta);
-
-    return false;
-}
-
-bool solicitarNumero(const string &mensaje, const short anchoCampo, string &numero, int max, int min)
-{
-    bool entradaCorrecta = false;
-    do
-    {
-        cout << mensaje;
-        cin >> setw(anchoCampo) >> numero;
-
-        if (!validarSoloNumero(numero))
-        {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
-            entradaCorrecta = false;
-        }
-        else if (!validarNumeroRango(numero, max, min))
-        {
-            cerr << "El dato que ingresaste está fuera del rango" << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-    } while (!entradaCorrecta);
-
-    numero = std::string((anchoCampo - 1) - numero.length(), '0') + numero;
-
-    return true;
-}
 // Gestor autos
-bool leerRegistro(ifstream &inArchivo, array<string, 7> &registro)
-{
-    for (string &campo : registro)
-    {
-        if (!(inArchivo >> campo))
-        {
-            return false;
-        }
-    }
-    return true;
-}
 
 void eliminarAuto(const string &direccionArchivo)
 {
     eliminarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
-}
-
-string solicitarCodigoAuto()
-{
-    string codigoAuto;
-    bool entradaCorrecta = false;
-    do
-    {
-        cout << "Ingrese el código del automóvil (formato A00000000): ";
-        cin.width(9);
-        getline(cin, codigoAuto);
-
-        cout << endl;
-        if (codigoAuto.empty())
-        {
-            cerr << "Error: Código de auto no puede estar vacío." << endl;
-            entradaCorrecta = false;
-        }
-        else if (!validarCodigoAuto(codigoAuto))
-        {
-            cerr << "Código inválido, por favor siga el formato." << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            entradaCorrecta = true;
-        }
-    } while (!entradaCorrecta);
-
-    return codigoAuto;
 }
 
 bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
@@ -327,6 +158,33 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
     }
 }
 
+array<string, columnasRegistro> getAuto(const string codigo, const string direccionArchivo)
+{
+    array<string, columnasRegistro> registroAuto;
+
+    fstream inArchivoAutos(direccionArchivo, ios::in);
+    if (!inArchivoAutos)
+    {
+        cerr << "No se pudo abrir el archivo" << endl;
+    }
+    else
+    {
+        cout << "El archivo se abrió correctamente" << endl;
+    }
+
+    while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
+    {
+        if (registroAuto[0] == codigo)
+        {
+            cout << "Auto encontrado" << endl;
+            return registroAuto;
+        }
+    }
+    inArchivoAutos.close();
+    cout << "Auto no encontrado!" << endl;
+    return array<string, columnasRegistro>{};
+}
+
 void imprimirDatosAuto(const array<string, columnasRegistro> &registroAuto)
 {
     cout << "\n============================ \n";
@@ -339,63 +197,6 @@ void imprimirDatosAuto(const array<string, columnasRegistro> &registroAuto)
     cout << "Equipo/Propietario: " << registroAuto[4] << endl;
     cout << "Costo del auto: " << registroAuto[5] << " USD" << endl;
     cout << "Número de identificación del registrador: " << registroAuto[6] << endl;
-}
-
-void formatearParaSalida(string &dato)
-{
-    dato = u8"\"" + dato + string(25 - dato.length(), ' ') + "\"";
-}
-
-string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo)
-{
-
-    int numeroGenerado = 1;
-    const unsigned int maxNum = 99999999;
-    string codigo;
-    array<string, columnasRegistro> camposRegistro;
-
-    fstream inArchivoAutos(direccionArchivo, ios::in);
-    if (!inArchivoAutos)
-    {
-        cerr << "No se pudo abrir el archivo. Generando el primer código." << endl;
-        return tipoCodigo + "00000001";
-    }
-
-    cout << "El archivo se abrió correctamente." << endl;
-
-    // Revisa si el archivo está vacío.
-    inArchivoAutos.seekg(0, ios::end);
-    if (inArchivoAutos.tellg() == 0)
-    {
-        inArchivoAutos.close();
-        return tipoCodigo + "00000001";
-    }
-
-    inArchivoAutos.seekg(0, ios::beg);
-
-    vector<string> codigosExistentes;
-
-    while (inArchivoAutos >> camposRegistro[0])
-    {
-        codigosExistentes.push_back(camposRegistro[0]);
-        inArchivoAutos.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-
-    inArchivoAutos.close();
-
-    while (numeroGenerado <= maxNum)
-    {
-        codigo = tipoCodigo + string(8 - to_string(numeroGenerado).length(), '0') + to_string(numeroGenerado);
-
-        if (find(codigosExistentes.begin(), codigosExistentes.end(), codigo) == codigosExistentes.end())
-        {
-            return codigo;
-        }
-        numeroGenerado++;
-    }
-
-    cerr << "No se pudo generar un código único. Se alcanzó el límite máximo." << endl;
-    return "";
 }
 
 void modificarAuto(const string &direccionArchivo)
@@ -412,6 +213,7 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
 {
     try
     {
+
         ifstream inArchivoAutos(direccionArchivo, ios::in);
         if (!inArchivoAutos)
         {
@@ -533,31 +335,34 @@ bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionAr
     return true;
 }
 
-array<string, columnasRegistro> getAuto(const string codigo, const string direccionArchivo)
+string solicitarCodigoAuto()
 {
-    array<string, columnasRegistro> registroAuto;
+    string codigoAuto;
+    bool entradaCorrecta = false;
+    do
+    {
+        cout << "Ingrese el código del automóvil (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto);
 
-    fstream inArchivoAutos(direccionArchivo, ios::in);
-    if (!inArchivoAutos)
-    {
-        cerr << "No se pudo abrir el archivo" << endl;
-    }
-    else
-    {
-        cout << "El archivo se abrió correctamente" << endl;
-    }
-
-    while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
-    {
-        if (registroAuto[0] == codigo)
+        cout << endl;
+        if (codigoAuto.empty())
         {
-            cout << "Auto encontrado" << endl;
-            return registroAuto;
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
         }
-    }
-    inArchivoAutos.close();
-    cout << "Auto no encontrado!" << endl;
-    return array<string, columnasRegistro>{};
+        else if (!validarCodigoAuto(codigoAuto))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    return codigoAuto;
 }
 
 // Gestor competencias
@@ -608,7 +413,149 @@ array<string, columnasRegistro> getCompetencia(const string codigo, const string
     return {""};
 }
 
+// Validador entradas
+bool validarCodigoAuto(const string &codigo)
+{
+    regex regexRule("A\\d{8}");
+
+    if (!regex_match(codigo, regexRule))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool validarCodigoCompetencia(const string &codigo)
+{
+    regex regexRule("C\\d{8}");
+
+    if (!regex_match(codigo, regexRule))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool validarFormatoFecha(const string &fecha)
+{
+    regex regexRule("(\\d{2})[/](\\d{2})[/](\\d{4})");
+
+    if (!regex_match(fecha, regexRule))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool validarNombre(const string nombre)
+{
+    if (nombre.length() > 25)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool validarNumeroRango(const string &numero, const int max, const int min)
+{
+    int num = stoi(numero);
+    if (num > max || num < min)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool validarSoloNumero(const string &numero)
+{
+
+    for (char c : numero)
+    {
+        if (!isdigit(c))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // Gestor general
+bool confirmarAccion(const string &mensaje)
+{
+    string seleccionUsuario;
+    bool entradaCorrecta = false;
+
+    do
+    {
+        cout << mensaje << " (y/n): ";
+        cin >> seleccionUsuario;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (seleccionUsuario == "Y" || seleccionUsuario == "y")
+        {
+            return true;
+        }
+        else if (seleccionUsuario == "N" || seleccionUsuario == "n")
+        {
+            return false;
+        }
+        else
+        {
+            cerr << "Error: Respuesta inválida\n";
+            entradaCorrecta = false;
+        }
+    } while (!entradaCorrecta);
+
+    return false;
+}
+
+void consultarAutoInventario(const string direccionArchivo)
+{
+    string codigoAuto = "";
+
+    bool deseaSalir = false;
+    cout << "\n============================ \n";
+    cout << "Consultar auto del inventario \n";
+    cout << "============================ \n";
+    do
+    {
+        bool entradaCorrecta = false;
+        cout << "Ingrese el código del automóvil (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto);
+
+        cout << endl;
+        if (codigoAuto.empty())
+        {
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarCodigoAuto(codigoAuto))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            array<string, columnasRegistro> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
+            if (!contenidoAuto.empty())
+            {
+                imprimirDatosAuto(contenidoAuto);
+            }
+            else
+            {
+                cerr << "Error: El auto no se ha encontrado" << endl;
+            }
+
+            deseaSalir = confirmarAccion("¿Desea volver al menu principal?");
+        }
+    } while (!deseaSalir);
+}
+
 bool ingresarAutoAlInventario(const string direccioArchivo)
 {
     string nombreAuto, codigo, equipoPropietario;
@@ -710,49 +657,6 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     {
         return false;
     }
-}
-
-void consultarAutoInventario(const string direccionArchivo)
-{
-    string codigoAuto = "";
-
-    bool deseaSalir = false;
-    cout << "\n============================ \n";
-    cout << "Consultar auto del inventario \n";
-    cout << "============================ \n";
-    do
-    {
-        bool entradaCorrecta = false;
-        cout << "Ingrese el código del automóvil (formato A00000000): ";
-        cin.width(9);
-        getline(cin, codigoAuto);
-
-        cout << endl;
-        if (codigoAuto.empty())
-        {
-            cerr << "Error: Código de auto no puede estar vacío." << endl;
-            entradaCorrecta = false;
-        }
-        else if (!validarCodigoAuto(codigoAuto))
-        {
-            cerr << "Código inválido, por favor siga el formato." << endl;
-            entradaCorrecta = false;
-        }
-        else
-        {
-            array<string, columnasRegistro> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
-            if (!contenidoAuto.empty())
-            {
-                imprimirDatosAuto(contenidoAuto);
-            }
-            else
-            {
-                cerr << "Error: El auto no se ha encontrado" << endl;
-            }
-
-            deseaSalir = confirmarAccion("¿Desea volver al menu principal?");
-        }
-    } while (!deseaSalir);
 }
 
 void menuInventarioAutos(const string direccionArchivo)
@@ -890,6 +794,36 @@ void menuInventarioAutos(const string direccionArchivo)
 //     return;
 // }
 // Formateador Entrada?
+
+bool solicitarNumero(const string &mensaje, const short anchoCampo, string &numero, int max, int min)
+{
+    bool entradaCorrecta = false;
+    do
+    {
+        cout << mensaje;
+        cin >> setw(anchoCampo) >> numero;
+
+        if (!validarSoloNumero(numero))
+        {
+            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarNumeroRango(numero, max, min))
+        {
+            cerr << "El dato que ingresaste está fuera del rango" << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            entradaCorrecta = true;
+        }
+    } while (!entradaCorrecta);
+
+    numero = std::string((anchoCampo - 1) - numero.length(), '0') + numero;
+
+    return true;
+}
+
 string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto)
 {
     string registro;
@@ -901,4 +835,62 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto
     }
 
     return registro;
+}
+
+// Formateador salida
+void formatearParaSalida(string &dato)
+{
+    dato = u8"\"" + dato + string(25 - dato.length(), ' ') + "\"";
+}
+
+string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo)
+{
+
+    int numeroGenerado = 1;
+    const unsigned int maxNum = 99999999;
+    string codigo;
+    array<string, columnasRegistro> camposRegistro;
+
+    fstream inArchivoAutos(direccionArchivo, ios::in);
+    if (!inArchivoAutos)
+    {
+        cerr << "No se pudo abrir el archivo. Generando el primer código." << endl;
+        return tipoCodigo + "00000001";
+    }
+
+    cout << "El archivo se abrió correctamente." << endl;
+
+    // Revisa si el archivo está vacío.
+    inArchivoAutos.seekg(0, ios::end);
+    if (inArchivoAutos.tellg() == 0)
+    {
+        inArchivoAutos.close();
+        return tipoCodigo + "00000001";
+    }
+
+    inArchivoAutos.seekg(0, ios::beg);
+
+    vector<string> codigosExistentes;
+
+    while (inArchivoAutos >> camposRegistro[0])
+    {
+        codigosExistentes.push_back(camposRegistro[0]);
+        inArchivoAutos.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    inArchivoAutos.close();
+
+    while (numeroGenerado <= maxNum)
+    {
+        codigo = tipoCodigo + string(8 - to_string(numeroGenerado).length(), '0') + to_string(numeroGenerado);
+
+        if (find(codigosExistentes.begin(), codigosExistentes.end(), codigo) == codigosExistentes.end())
+        {
+            return codigo;
+        }
+        numeroGenerado++;
+    }
+
+    cerr << "No se pudo generar un código único. Se alcanzó el límite máximo." << endl;
+    return "";
 }
