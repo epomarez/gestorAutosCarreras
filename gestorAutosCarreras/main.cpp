@@ -46,7 +46,9 @@ bool confirmarAccion(const string &);
 void consultarAutoInventario(const string);
 string generarCodigoUnico(const string, const string);
 bool ingresarAutoAlInventario(const string);
+bool ingresarCompetenciaAlInventario(const string, const string);
 void menuInventarioAutos(const string);
+void menuInventarioCompetencias(const string, const string);
 bool solicitarNumero(const string &, const short, string &, int, int);
 
 //? Formateador Salida
@@ -56,11 +58,11 @@ string formatearSalidaDatosCompetencia(string[]);
 //? Formateador Entrada
 string convertirRegistroEnString(const array<string, columnasRegistro> &);
 
-//* Funcion main
+//* MAIN
 int main()
 {
     setlocale(LC_CTYPE, "Spanish");
-    menuInventarioAutos("Autos.txt");
+    menuInventarioCompetencias("Competencias.txt", "Autos.txt");
     return 0;
 }
 
@@ -383,6 +385,7 @@ bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, stri
 
     appArchivoCompetencias << registroCompetencia << endl;
     appArchivoCompetencias.close();
+
     return true;
 }
 
@@ -411,6 +414,128 @@ array<string, columnasRegistro> getCompetencia(const string codigo, const string
     cout << "Competencia no encontrada!" << endl;
     inArchivoAutos.close();
     return {""};
+}
+
+string menuCategoriaCompetencia()
+{
+    int seleccionMenu = 0;
+    bool entradaCorrecta = false;
+    string categoriaCompetencia = "";
+
+    string menu = "\n\n************************************\n"
+                  "Seleccione la categoría de la carrera.\n"
+                  "1. Sprint.\n"
+                  "2. Endurance.\n"
+                  "3. Drift.\n"
+                  "Seleccione una opcion: ";
+
+    do
+    {
+        cout << menu;
+        cin >> seleccionMenu;
+
+        if (!cin.good())
+        {
+            cout << "Sólo se permite el ingreso de números" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Presione Enter para continuar...";
+            cin.get();
+        }
+        else
+        {
+            switch (seleccionMenu)
+            {
+
+            case 1:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                categoriaCompetencia = "Sprint";
+                entradaCorrecta = true;
+                break;
+            case 2:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                categoriaCompetencia = "Endurance";
+                entradaCorrecta = true;
+                break;
+            case 3:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                categoriaCompetencia = "Drift";
+                entradaCorrecta = true;
+                break;
+            default:
+                cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
+                entradaCorrecta = false;
+                cout << "Presione Enter para continuar...";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+                break;
+            }
+        }
+
+    } while (!entradaCorrecta);
+
+    return categoriaCompetencia;
+}
+
+string menuEstadoCompetencia()
+{
+    int seleccionMenu = 0;
+    bool entradaCorrecta = false;
+    string estadoCompetencia = "";
+
+    string menu = "\n\n************************************\n"
+                  "Seleccione el estado de la competencia.\n"
+                  "1. En proceso.\n"
+                  "2. Cancelada.\n"
+                  "3. Finalizada.\n"
+                  "Seleccione una opcion: ";
+
+    do
+    {
+        cout << menu;
+        cin >> seleccionMenu;
+
+        if (!cin.good())
+        {
+            cout << "Sólo se permite el ingreso de números" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Presione Enter para continuar...";
+            cin.get();
+        }
+        else
+        {
+            switch (seleccionMenu)
+            {
+
+            case 1:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                estadoCompetencia = "En proceso";
+                entradaCorrecta = true;
+                break;
+            case 2:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                estadoCompetencia = "Cancelada";
+                entradaCorrecta = true;
+                break;
+            case 3:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                estadoCompetencia = "Finalizada";
+                entradaCorrecta = true;
+                break;
+            default:
+                cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
+                entradaCorrecta = false;
+                cout << "Presione Enter para continuar...";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+                break;
+            }
+        }
+
+    } while (!entradaCorrecta);
+
+    return estadoCompetencia;
 }
 
 // Validador entradas
@@ -659,6 +784,149 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     }
 }
 
+bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string direccionArchivoAutos)
+{
+    string categoriaCompetencia, codigo, fechaCompetencia;
+    string estadoCompetencia, codigoAuto1;
+    string codigoAuto2, identificacionPropietario;
+    array<string, columnasRegistro> datosCompetencia;
+    array<string, 7> registroCompetencia;
+
+    bool entradaCorrecta = false;
+
+    cout << "\n============================ \n";
+    cout << "REGISTRO DE AUTO A COMPETENCIA \n";
+    cout << "============================ \n";
+
+    codigo = generarCodigoUnico("C", direccionArchivo);
+    cout << "Código único de competencia (generado automáticamente): " << codigo << endl;
+
+    string codigoAuto;
+
+    bool deseaSalir = false;
+    cout << "\n============================ \n";
+    cout << "Consultar auto del inventario \n";
+    cout << "============================ \n";
+
+    array<array<string, columnasRegistro>, 2> contenidoAutos;
+
+    // Solicita el auto 1, valida y confirma solicitud de usuario.
+    do
+    {
+        cout << "Ingrese el código del automóvil 1 (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto1);
+
+        cout << endl;
+        if (codigoAuto1.empty())
+        {
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
+        }
+        else if (!validarCodigoAuto(codigoAuto1))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            contenidoAutos[0] = getAuto(codigoAuto1, direccionArchivoAutos);
+            if (!contenidoAutos[0][0].empty())
+            {
+                entradaCorrecta = true;
+            }
+            else
+            {
+                cerr << "Error: El auto no se ha encontrado" << endl;
+                entradaCorrecta = false;
+            }
+        }
+    } while (!entradaCorrecta);
+
+    entradaCorrecta = false;
+
+    // Solicita el auto 2, valida y confirma solicitud de usuario.
+    do
+    {
+        cout << "Ingrese el código del automóvil 2 (formato A00000000): ";
+        cin.width(9);
+        getline(cin, codigoAuto2);
+
+        cout << endl;
+        if (codigoAuto2.empty())
+        {
+            cerr << "Error: Código de auto no puede estar vacío." << endl;
+            entradaCorrecta = false;
+        }
+        else if (codigoAuto2 == codigoAuto1)
+        {
+            cerr << "No puede colocarse dos veces un auto en una competencia" << endl;
+        }
+        else if (!validarCodigoAuto(codigoAuto2))
+        {
+            cerr << "Código inválido, por favor siga el formato." << endl;
+            entradaCorrecta = false;
+        }
+        else
+        {
+            contenidoAutos[1] = getAuto(codigoAuto2, direccionArchivoAutos);
+            if (!contenidoAutos[1][0].empty())
+            {
+                entradaCorrecta = true;
+            }
+            else
+            {
+                cerr << "Error: El auto no se ha encontrado" << endl;
+                entradaCorrecta = false;
+            }
+        }
+    } while (!entradaCorrecta);
+
+    entradaCorrecta = false;
+
+    categoriaCompetencia = menuCategoriaCompetencia();
+
+    do
+    {
+        cout << "Ingrese la fecha de la competencia (DD/MM/AAAA):" << endl;
+        cin.width(10);
+        getline(cin, fechaCompetencia);
+        cout << endl;
+        if (fechaCompetencia.empty())
+        {
+            cout << "Fecha no puede estar vacía" << endl;
+            entradaCorrecta = false;
+            continue;
+        }
+        else if (!validarFormatoFecha(fechaCompetencia))
+        {
+            entradaCorrecta = false;
+            cerr << "Error: El formato de la fecha no es válido." << endl;
+            continue;
+        }
+        entradaCorrecta = true;
+
+    } while (!entradaCorrecta);
+
+    entradaCorrecta = false;
+
+    estadoCompetencia = menuEstadoCompetencia();
+
+    formatearParaSalida(categoriaCompetencia);
+    formatearParaSalida(estadoCompetencia);
+
+    datosCompetencia = array<string, columnasRegistro>{codigo, codigoAuto1, codigoAuto2, fechaCompetencia, categoriaCompetencia, estadoCompetencia};
+
+    if (setCompetencia(datosCompetencia, direccionArchivo))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void menuInventarioAutos(const string direccionArchivo)
 {
     int seleccionMenu = 0;
@@ -735,64 +1003,65 @@ void menuInventarioAutos(const string direccionArchivo)
     return;
 }
 
-// TODO: Haré esto luego.
-//  void menuInventarioCompetencias(const string direccionArchivo)
-//  {
-//      int seleccionMenu = 0;
-//      bool salir = false;
+void menuInventarioCompetencias(const string direccionArchivoCompetencias, const string direccionArchivoAutos)
+{
+    int seleccionMenu = 0;
+    bool salir = false;
 
-//     string menuInicio = "\n\n************************************\n"
-//                         "Registro de Competencias.\n"
-//                         "1. Inscribit auto en competencia.\n"
-//                         "2. Consultar competencia.\n"
-//                         "3. Salir del registro de competencias.\n"
-//                         "Seleccione una opcion: ";
+    string menuInicio = "\n\n************************************\n"
+                        "Registro de Competencias.\n"
+                        "1. Inscribir auto en competencia.\n"
+                        "2. Consultar competencia.\n"
+                        "3. Salir del registro de competencias.\n"
+                        "Seleccione una opcion: ";
 
-//     do
-//     {
-//         cout << menuInicio;
-//         cin >> seleccionMenu;
+    do
+    {
+        cout << menuInicio;
+        cin >> seleccionMenu;
 
-//         if (!cin.good())
-//         {
-//             cout << "Sólo se permite el ingreso de números" << endl;
-//             cin.clear();
-//             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-//         }
-//         else
-//         {
-//             switch (seleccionMenu)
-//             {
+        if (!cin.good())
+        {
+            cout << "Sólo se permite el ingreso de números" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Presione Enter para continuar...";
+            cin.get();
+        }
+        else
+        {
+            switch (seleccionMenu)
+            {
 
-//             case 1:
-//                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
-//                 modificarRegistroAuto(solicitarCodigoAuto(), direccionArchivo);
-//                 cout << "Presione Enter para continuar...";
-//                 cin.get();
-//                 break;
-//             case 2:
-//                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
-//                 consultarAutoInventario(direccionArchivo);
-//                 cout << "Presione Enter para continuar...";
-//                 cin.get();
-//                 break;
+            case 1:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                ingresarCompetenciaAlInventario(direccionArchivoCompetencias, direccionArchivoAutos);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
+            case 2:
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                consultarAutoInventario(direccionArchivoCompetencias);
+                cout << "Presione Enter para continuar...";
+                cin.get();
+                break;
 
-//             case 3:
-//                 salir = true;
-//                 break;
-//             default:
-//                 cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
-//                 cout << "Presione Enter para continuar...";
-//                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
-//                 cin.get();
-//                 break;
-//             }
-//         }
+            case 3:
+                salir = true;
+                break;
+            default:
+                cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
+                cout << "Presione Enter para continuar...";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+                break;
+            }
+        }
 
-//     } while (!salir);
+    } while (!salir);
 
-//     return;
-// }
+    return;
+}
 // Formateador Entrada?
 
 bool solicitarNumero(const string &mensaje, const short anchoCampo, string &numero, int max, int min)
