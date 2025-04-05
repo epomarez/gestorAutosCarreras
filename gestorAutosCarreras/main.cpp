@@ -17,7 +17,6 @@
 using namespace std;
 
 // Gestor autos
-// const size_t registrosAutos{25};
 const size_t columnasRegistro{7};
 void eliminarAuto(const string &);
 bool eliminarRegistroAuto(const string &, const string &);
@@ -32,11 +31,9 @@ string solicitarCodigoAuto();
 // Gestor competencias
 const size_t filasCompetencias{7};
 const size_t columnasRegistroCompetencia{7};
-// bool eliminarCompetencia(const string, const string);
 // string generarCodigoCompetencia();
 array<string, columnasRegistro> getCompetencia(const string, const string);
 bool setCompetencia(const array<string, columnasRegistro> &, const string);
-// string modificarCompetencia(const string, const string[]);
 
 // Validador entradas
 bool validarCodigoAuto(const string &);
@@ -60,7 +57,6 @@ string formatearSalidaDatosCompetencia(string[]);
 
 //? Formateador Entrada
 string convertirRegistroEnString(const array<string, columnasRegistro> &);
-// string formatearEntradaDatosCompetencia(string[]);
 //* Funcion main
 int main()
 {
@@ -175,7 +171,6 @@ bool solicitarNumero(const string &mensaje, const short anchoCampo, string &nume
     {
         cout << mensaje;
         cin >> setw(anchoCampo) >> numero;
-        // 1cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         if (!validarSoloNumero(numero))
         {
