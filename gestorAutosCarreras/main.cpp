@@ -26,6 +26,7 @@ bool eliminarRegistroAuto(const string &, const string &);
 array<string, columnasRegistro> getAuto(const string, const string);
 void imprimirDatosAuto(const array<string, columnasRegistro> &);
 void modificarRegistroAuto(const string &, const string &);
+void reporteAutosInventario(const string &);
 bool setAuto(const array<string, columnasRegistro> &, const string);
 string solicitarCodigoAuto();
 
@@ -33,6 +34,7 @@ string solicitarCodigoAuto();
 const size_t columnasRegistroCompetencia{7};
 array<string, columnasRegistro> getCompetencia(const string, const string);
 void imprimirDatosCompetencia(const array<string, columnasRegistro> &);
+void reporteCompetencias(const string &);
 bool setCompetencia(const array<string, columnasRegistroCompetencia> &, const string);
 
 // Validador entradas
@@ -67,8 +69,8 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &);
 int main()
 {
     setlocale(LC_CTYPE, "Spanish");
-    consultarAutoInventario("Autos.txt");
-    consultarCompetenciaInventario("Competencias.txt");
+    reporteAutosInventario("Autos.txt");
+
     return 0;
 }
 
@@ -321,6 +323,41 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
     }
 }
 
+void reporteAutosInventario(const string &direccionArchivo)
+{
+    ifstream inArchivosAutos(direccionArchivo, ios::in);
+    array<string, columnasRegistro> registroAuto;
+    if (!inArchivosAutos)
+    {
+        cout << "Error: No se pudo abrir el archivo " << direccionArchivo << endl;
+    }
+    else
+    {
+        cout << "El archivo se abrió correctamente" << endl;
+        cout << endl;
+        cout << "============================ \n"
+             << "Reporte de autos en inventario \n"
+             << "============================ \n";
+        cout << endl;
+        cout << left << setw(11) << "Codigo" << "|"
+             << setw(27) << "Nombre" << "|"
+             << setw(10) << "Velocidad" << "|"
+             << setw(10) << "Caballos" << "|"
+             << setw(9) << "Costo" << "|"
+             << setw(15) << "ID Propietario" << "|" << endl;
+
+        while (inArchivosAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
+        {
+            cout << left << setw(11) << registroAuto[0] << "|"
+                 << setw(27) << registroAuto[1] << "|"
+                 << setw(10) << registroAuto[2] << "|"
+                 << setw(10) << registroAuto[3] << "|"
+                 << setw(9) << registroAuto[5] << "|"
+                 << setw(15) << registroAuto[6] << "|" << endl;
+        }
+    }
+}
+
 bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionArchivo)
 {
 
@@ -374,26 +411,6 @@ string solicitarCodigoAuto()
 }
 
 // Gestor competencias
-bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, string direccionArchivo)
-{
-    ofstream appArchivoCompetencias(direccionArchivo, ios::app);
-    if (!appArchivoCompetencias)
-    {
-        cout << "Hubo un error, no se pudo abrir el archivo!" << endl;
-        return false;
-    }
-    else
-    {
-        cout << "El archivo se pudo abrir exitosamente!" << endl;
-    }
-
-    string registroCompetencia = convertirRegistroEnString(infoCompetencia);
-
-    appArchivoCompetencias << registroCompetencia << endl;
-    appArchivoCompetencias.close();
-
-    return true;
-}
 
 array<string, columnasRegistro> getCompetencia(const string codigo, const string direccionArchivo)
 {
@@ -558,6 +575,63 @@ string menuEstadoCompetencia()
     return estadoCompetencia;
 }
 
+void reporteCompetencias(const string &direccionArchivo)
+{
+    ifstream inArchivosCompetencias(direccionArchivo, ios::in);
+    array<string, columnasRegistro> registroCompetencia;
+    if (!inArchivosCompetencias)
+    {
+        cout << "Error: No se pudo abrir el archivo " << direccionArchivo << endl;
+    }
+    else
+    {
+        cout << "El archivo se abrió correctamente" << endl;
+        cout << endl;
+        cout << "============================ \n"
+             << "Reporte de competencias \n"
+             << "============================ \n";
+        cout << endl;
+        cout << left << setw(11) << "Codigo" << "|"
+             << setw(11) << "Auto 1" << "|"
+             << setw(11) << "Auto 2" << "|"
+             << setw(10) << "Fecha" << "|"
+             << setw(25) << "Categoria" << "|"
+             << setw(25) << "Estado" << "|"
+             << setw(10) << "Ganador" << "|" << endl;
+
+        while (inArchivosCompetencias >> registroCompetencia[0] >> registroCompetencia[1] >> registroCompetencia[2] >> registroCompetencia[3] >> quoted(registroCompetencia[4]) >> quoted(registroCompetencia[5]) >> registroCompetencia[6])
+        {
+            cout << left << setw(11) << registroCompetencia[0] << "|"
+                 << setw(11) << registroCompetencia[1] << "|"
+                 << setw(11) << registroCompetencia[2] << "|"
+                 << setw(10) << registroCompetencia[3] << "|"
+                 << setw(15) << registroCompetencia[4] << "|"
+                 << setw(15) << registroCompetencia[5] << "|"
+                 << setw(15) << registroCompetencia[6] << "|" << endl;
+        }
+    }
+}
+
+bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, string direccionArchivo)
+{
+    ofstream appArchivoCompetencias(direccionArchivo, ios::app);
+    if (!appArchivoCompetencias)
+    {
+        cout << "Hubo un error, no se pudo abrir el archivo!" << endl;
+        return false;
+    }
+    else
+    {
+        cout << "El archivo se pudo abrir exitosamente!" << endl;
+    }
+
+    string registroCompetencia = convertirRegistroEnString(infoCompetencia);
+
+    appArchivoCompetencias << registroCompetencia << endl;
+    appArchivoCompetencias.close();
+
+    return true;
+}
 // Validador entradas
 bool validarCodigo(const string &codigo, const char tipo)
 {
