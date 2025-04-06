@@ -1,16 +1,9 @@
-// TODO: Al ingresar, e ingresar texto con tilde, aparece como null en el .txt.
-// TODO: La opción para salir del inventario no está configurada propiamente.
-// TODO: Falta la funcionalidad de competencias.
-// TODO: El menú de autos es sólo un submenu de otro principal.
 #include <array>
 #include <algorithm>
 #include <cctype>
 #include <fstream>
-#include <cstdlib>
-#include <cstdio>
 #include <iostream>
 #include <iomanip>
-#include <optional>
 #include <locale>
 #include <regex>
 #include <windows.h>
@@ -19,56 +12,51 @@
 using namespace std;
 
 // Gestor autos
-const size_t columnasRegistro{7};
-void eliminarAuto(const string &);
-bool eliminarRegistroAuto(const string &, const string &);
-array<string, columnasRegistro> getAuto(const string, const string);
+const size_t columnasRegistro{7};                                    // Evita hardcodear el tamaño del array
+void eliminarAuto(const string &);                                   // Solicita codigo y llama a eliminar registro auto del inventario
+bool eliminarRegistroAuto(const string &, const string &);           // Eliminar registro auto del inventario
+array<string, columnasRegistro> getAuto(const string, const string); // Obtener registro auto del inventario
 void imprimirDatosAuto(const array<string, columnasRegistro> &);
 void modificarRegistroAuto(const string &, const string &);
 void reporteAutosInventario(const string &);
-bool setAuto(const array<string, columnasRegistro> &, const string);
-string solicitarCodigoAuto();
-
+bool setAuto(const array<string, columnasRegistro> &, const string); // Escribir registro auto en el inventario
+string solicitarCodigoAuto();                                        // Solicita el código del auto al usuario y valida
 // Gestor competencias
-const size_t columnasRegistroCompetencia{7};
-array<string, columnasRegistro> getCompetencia(const string, const string);
-void imprimirDatosCompetencia(const array<string, columnasRegistro> &);
-string menuGanadorCompetencia(const string, const string);
+const size_t columnasRegistroCompetencia{7};                                // Evita hardcodear el tamaño del array
+array<string, columnasRegistro> getCompetencia(const string, const string); // Obtener registro competencia del inventario
+void imprimirDatosCompetencia(const array<string, columnasRegistro> &);     // Imprimie en consola los datos de la competencia
+string menuGanadorCompetencia(const string, const string);                  // Este menu pregunta por el auto ganador
 void reporteCompetencias(const string &);
-bool setCompetencia(const array<string, columnasRegistroCompetencia> &, const string);
+bool setCompetencia(const array<string, columnasRegistroCompetencia> &, const string); // Escribe en archivo el registro de la competencia
 
 // Validador entradas
-bool validarCodigo(const string &, const char);
+bool validarCodigo(const string &, const char); // Valida el formato del código
 bool validarFormatoFecha(const string &);
 bool validarNombre(string);
-bool validarNumeroRango(const string &, const int, const int);
+bool validarNumeroRango(const string &, const int, const int); // Valida el rango de un número
 bool validarSoloNumero(const string &);
 
 // Gestor General
-//! Debe confirmar ingreso antes de escribir en archivo.
-bool confirmarAccion(const string &);
+bool confirmarAccion(const string &); // Se usa para preguntas de sí o no, evita duplicar código
 void consultarAutoInventario(const string);
 void consultarCompetenciaInventario(const string);
-string generarCodigoUnico(const string, const string);
-bool ingresarAutoAlInventario(const string);
-bool ingresarCompetenciaAlInventario(const string, const string);
-void menuInventarioAutos(const string);
-void menuInventarioCompetencias(const string, const string);
-bool solicitarNumero(const string &, const short, string &, int, int);
-bool solicitarTexto(const string, string &, int);
-int mostrarMenu(const string, const int);
+string generarCodigoUnico(const string, const string);                 // Genera un código único para el auto o competencia
+bool ingresarAutoAlInventario(const string);                           // Llama a la función que ingresa el auto al inventario
+bool ingresarCompetenciaAlInventario(const string, const string);      // Llama a la función que ingresa la competencia al inventario
+void menuInventarioAutos(const string);                                // Abre el menú para gestionar inventario de autos
+void menuInventarioCompetencias(const string, const string);           // Abre el menú para gestionar inventario de competencias
+bool solicitarNumero(const string &, const short, string &, int, int); // Solicita un número al usuario y valida
+bool solicitarTexto(const string, string &, int);                      // Solicita un texto al usuario y valida
+int mostrarMenu(const string, const int);                              // Muestra un menú y devuelve la opción seleccionada por el usuario
 
-//? Formateador Salida
-void formatearParaSalida(string &);
-
-//? Formateador Entrada
-string convertirRegistroEnString(const array<string, columnasRegistro> &);
+void formatearParaSalida(string &);                                        // Formatea texto según un estandar común para escribir en archivo
+string convertirRegistroEnString(const array<string, columnasRegistro> &); // Convierte un arreglo a un sólo string
 
 //* MAIN
 int main()
 {
     setlocale(LC_CTYPE, "Spanish");
-    // system("CLS");
+    system("CLS");
     const string ArchivoAutos = "Autos.txt";
     const string ArchivoCompetencias = "Competencias.txt";
 
@@ -140,6 +128,11 @@ void eliminarAuto(const string &direccionArchivo)
 
 bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
 {
+    /*Esta función simula la eliminación de un registro de auto en el inventario,
+    mediante la creación de un archivo temporal. Si el registro se encuentra,
+    no se copia al archivo temporal. Luego, se elimina el archivo original y
+    se renombra el archivo temporal al nombre del archivo original.
+    */
     try
     {
         ifstream inArchivoAutos(direccionArchivo, ios::in);
@@ -155,10 +148,10 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
         array<string, columnasRegistro> registroAuto;
 
         bool autoEncontrado = false;
-
+        // Este while escribe en el archivo temporal todos los registros que no son el que se busca
         while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
         {
-            if (registroAuto[0].empty() || !(registroAuto[0] == codigo))
+            if (registroAuto[0].empty() || !(registroAuto[0] == codigo)) // Si el registro no es el que se busca, lo escribe en el archivo temporal
             {
 
                 outArchivoTemp << registroAuto[0] << " " << quoted(registroAuto[1]) << " "
@@ -225,6 +218,7 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
 
 array<string, columnasRegistro> getAuto(const string codigo, const string direccionArchivo)
 {
+    // Esta función busca un registro de auto en el inventario y lo devuelve como un array de strings.
     array<string, columnasRegistro> registroAuto;
 
     fstream inArchivoAutos(direccionArchivo, ios::in);
@@ -276,6 +270,10 @@ void modificarAuto(const string &direccionArchivo)
 
 void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
 {
+    /* Al igual que la función de eliminar, esta función simula la modificación
+    de un registro de auto en el inventario, mediante la creación de un archivo temporal.
+    Si el registro se encuentra, se modifica y se copia al archivo temporal.
+    */
     try
     {
 
@@ -377,6 +375,7 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
 
 void reporteAutosInventario(const string &direccionArchivo)
 {
+    // Esta función recorre el archivo de autos e imprime cada registro en consola.
     ifstream inArchivosAutos(direccionArchivo, ios::in);
     array<string, columnasRegistro> registroAuto;
     if (!inArchivosAutos)
@@ -412,7 +411,7 @@ void reporteAutosInventario(const string &direccionArchivo)
 
 bool setAuto(const array<string, columnasRegistro> &infoAuto, string direccionArchivo)
 {
-
+    // Esta función escribe directamente en el archivo de autos el registro del auto.
     ofstream appArchivoAutos(direccionArchivo, ios::app);
     if (!appArchivoAutos)
     {
@@ -443,12 +442,12 @@ string solicitarCodigoAuto()
         getline(cin, codigoAuto);
 
         cout << endl;
-        if (codigoAuto.empty())
+        if (codigoAuto.empty()) // Validar que el código no esté vacío
         {
             cerr << "Error: Código de auto no puede estar vacío." << endl;
             entradaCorrecta = false;
         }
-        else if (!validarCodigo(codigoAuto, 'A'))
+        else if (!validarCodigo(codigoAuto, 'A')) // Validar el formato del código
         {
             cerr << "Código inválido, por favor siga el formato." << endl;
             entradaCorrecta = false;
@@ -466,7 +465,8 @@ string solicitarCodigoAuto()
 
 array<string, columnasRegistro> getCompetencia(const string codigo, const string direccionArchivo)
 {
-    array<string, 7> registroCompetencia;
+    // Esta función busca un registro de competencia en el inventario y lo devuelve como un array de strings.
+    array<string, columnasRegistroCompetencia> registroCompetencia;
 
     fstream inArchivoAutos(direccionArchivo, ios::in);
     if (!inArchivoAutos)
@@ -477,7 +477,7 @@ array<string, columnasRegistro> getCompetencia(const string codigo, const string
     {
         cout << "El archivo se abrió correctamente" << endl;
     }
-
+    // Busca el registro de competencia en el archivo y lo devuelve como un array de strings.
     while (inArchivoAutos >> registroCompetencia[0] >> registroCompetencia[1] >> registroCompetencia[2] >> registroCompetencia[3] >> quoted(registroCompetencia[4]) >> quoted(registroCompetencia[5]) >> registroCompetencia[6])
     {
         if (registroCompetencia[0] == codigo)
@@ -626,6 +626,7 @@ string menuEstadoCompetencia()
 
 string menuGanadorCompetencia(const string auto1, const string auto2)
 {
+    /// Esta función muestra un menú para seleccionar el ganador de la competencia.
     int seleccionMenu = 0;
     bool entradaCorrecta = false;
     string autoGanador = "";
@@ -727,6 +728,7 @@ bool setCompetencia(const array<string, columnasRegistro> &infoCompetencia, stri
 // Validador entradas
 bool validarCodigo(const string &codigo, const char tipo)
 {
+    // Esta función valida el formato del código mediante una expresión regular.
     regex regexRule((string(1, tipo) + "\\d{8}"));
 
     if (!regex_match(codigo, regexRule))
@@ -739,6 +741,8 @@ bool validarCodigo(const string &codigo, const char tipo)
 
 bool validarFormatoFecha(const string &fecha)
 {
+    // Esta función valida el formato de la fecha en el formato dd/mm/yyyy
+    // mediante una expresión regular.
     regex regexRule("(\\d{2})[/](\\d{2})[/](\\d{4})");
 
     if (!regex_match(fecha, regexRule))
@@ -882,8 +886,9 @@ void consultarCompetenciaInventario(const string direccionArchivo)
         cout << "Ingrese el código de la competencia (formato C00000000): ";
         cin.width(9);
         getline(cin, codigoCompetencia);
-
         cout << endl;
+        // Validar que el código no esté vacío
+        // Validar el formato del código
         if (codigoCompetencia.empty())
         {
             cerr << "Error: Código de competencia no puede estar vacío." << endl;
@@ -897,6 +902,7 @@ void consultarCompetenciaInventario(const string direccionArchivo)
         else
         {
             array<string, columnasRegistro> contenidoCompetencia = getCompetencia(codigoCompetencia, direccionArchivo);
+            // Busca el registro de competencia en el archivo y lo devuelve como un array de strings.
             if (!contenidoCompetencia.empty() && contenidoCompetencia[0] == codigoCompetencia)
             {
                 cout << "Competencia encontrada!" << endl;
@@ -937,7 +943,7 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     mensaje += "\n (más de 8 cifras serán omitidas): ";
     solicitarNumero(mensaje, 9, identificacionPropietario, 99999999, 1);
 
-    formatearParaSalida(nombreAuto);
+    formatearParaSalida(nombreAuto); // Formatear para escribir en el archivo
     formatearParaSalida(equipoPropietario);
 
     datosAuto = array<string, columnasRegistro>{codigo, nombreAuto, velocidadMaxima, caballosFuerza, equipoPropietario, costoAuto, identificacionPropietario};
@@ -1017,9 +1023,10 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
             cerr << "Error: Código de auto no puede estar vacío." << endl;
             entradaCorrecta = false;
         }
-        else if (codigoAuto1 == codigoAuto2)
+        else if (codigoAuto1 == codigoAuto2) // Validar que no se repita el auto 1
         {
             cerr << "No puede colocarse dos veces un auto en una competencia" << endl;
+            entradaCorrecta = false;
         }
         else if (!validarCodigo(codigoAuto2, 'A'))
         {
@@ -1029,7 +1036,7 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
         else
         {
             contenidoAutos[1] = getAuto(codigoAuto2, direccionArchivoAutos);
-            if (!contenidoAutos[1][0].empty())
+            if (!contenidoAutos[1][0].empty()) // Validar que el auto exista
             {
                 entradaCorrecta = true;
             }
@@ -1081,7 +1088,7 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
         autoGanador = "N/A";
     }
 
-    formatearParaSalida(categoriaCompetencia);
+    formatearParaSalida(categoriaCompetencia); // Formatear para escribir en el archivo
     formatearParaSalida(estadoCompetencia);
 
     datosCompetencia = array<string, columnasRegistro>{codigo, codigoAuto1, codigoAuto2, fechaCompetencia, categoriaCompetencia, estadoCompetencia, autoGanador};
@@ -1194,6 +1201,8 @@ void menuInventarioCompetencias(const string direccionArchivoCompetencias, const
 
 int mostrarMenu(const string menu, const int opciones)
 {
+    // Ayuda a mostrar cualquier menú y validar la entrada del usuario.
+    // Devuelve la opción seleccionada por el usuario.
     int seleccionMenu = 0;
     bool entradaCorrecta = false;
 
@@ -1215,7 +1224,6 @@ int mostrarMenu(const string menu, const int opciones)
 
     return seleccionMenu;
 }
-// Formateador Entrada?
 
 bool solicitarNumero(const string &mensaje, const short anchoCampo, string &numero, int max, int min)
 {
@@ -1254,6 +1262,8 @@ bool solicitarNumero(const string &mensaje, const short anchoCampo, string &nume
 
 bool solicitarTexto(const string mensaje, string &texto, int maxLongitud)
 {
+    // Esta función solicita un texto al usuario y valida su longitud,
+    // asegurándose de que no esté vacío y no exceda la longitud máxima permitida.
     bool entradaCorrecta = false;
     do
     {
@@ -1281,6 +1291,8 @@ bool solicitarTexto(const string mensaje, string &texto, int maxLongitud)
 
 string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto)
 {
+    // Esta función convierte un array de strings en un string formateado para el archivo.
+    // Separa los campos con un espacio.
     string registro;
     for (const string &campo : infoAuto)
     {
@@ -1297,7 +1309,7 @@ void formatearParaSalida(string &dato)
 {
     if (dato.length() > 25)
     {
-        dato = dato.substr(0, 25); // Truncate to 25 characters
+        dato = dato.substr(0, 25); // Limitar a 25 caracteres
     }
     dato = u8"\"" + dato + string(25 - dato.length(), ' ') + "\"";
 }
@@ -1306,7 +1318,7 @@ string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo
 {
 
     int numeroGenerado = 1;
-    const unsigned int maxNum = 99999999;
+    const unsigned int maxNum = 99999999; // 8 dígitos
     string codigo;
     array<string, columnasRegistro> camposRegistro;
 
@@ -1341,8 +1353,11 @@ string generarCodigoUnico(const string tipoCodigo, const string direccionArchivo
 
     while (numeroGenerado <= maxNum)
     {
+        // Genera el código con ceros a la izquierda.
         codigo = tipoCodigo + string(8 - to_string(numeroGenerado).length(), '0') + to_string(numeroGenerado);
 
+        // Verifica si el código ya existe en el archivo.
+        // Si no existe, lo devuelve.
         if (find(codigosExistentes.begin(), codigosExistentes.end(), codigo) == codigosExistentes.end())
         {
             return codigo;
