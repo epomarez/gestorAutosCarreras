@@ -69,6 +69,56 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &);
 int main()
 {
     setlocale(LC_CTYPE, "Spanish");
+    const string ArchivoAutos = "Autos.txt";
+    const string ArchivoCompetencias = "Competencias.txt";
+
+    string menu = "\n\n************************************\n"
+                  "Sistema de gestión de autos.\n"
+                  "1. Inventario de autos.\n"
+                  "2. Inventario de competencias.\n"
+                  "3. Reporte de autos.\n"
+                  "4. Reporte de competencias.\n"
+                  "5. Salir.\n"
+                  "Seleccione una opcion: ";
+    bool deseaSalir = false;
+    do
+    {
+        int seleccionMenu = mostrarMenu(menu, 5);
+        switch (seleccionMenu)
+        {
+        case 1:
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            menuInventarioAutos(ArchivoAutos);
+            cout << "Presione Enter para continuar...";
+            cin.get();
+            break;
+        case 2:
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            menuInventarioCompetencias(ArchivoAutos, ArchivoCompetencias);
+            cout << "Presione Enter para continuar...";
+            cin.get();
+            break;
+        case 3:
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            reporteAutosInventario(ArchivoAutos);
+            cout << "Presione Enter para continuar...";
+            cin.get();
+            break;
+        case 4:
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            reporteCompetencias(ArchivoCompetencias);
+            cout << "Presione Enter para continuar...";
+            cin.get();
+            break;
+        case 5:
+            deseaSalir = true;
+            break;
+        default:
+            cout << "Opción no válida. Intente de nuevo." << endl;
+            break;
+        }
+    } while (!deseaSalir);
+
     reporteAutosInventario("Autos.txt");
 
     return 0;
