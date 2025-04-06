@@ -20,7 +20,6 @@ using namespace std;
 
 // Gestor autos
 const size_t columnasRegistro{7};
-bool confirmarEliminacionAuto();
 void eliminarAuto(const string &);
 bool eliminarRegistroAuto(const string &, const string &);
 array<string, columnasRegistro> getAuto(const string, const string);
@@ -34,6 +33,7 @@ string solicitarCodigoAuto();
 const size_t columnasRegistroCompetencia{7};
 array<string, columnasRegistro> getCompetencia(const string, const string);
 void imprimirDatosCompetencia(const array<string, columnasRegistro> &);
+string menuGanadorCompetencia(const string, const string);
 void reporteCompetencias(const string &);
 bool setCompetencia(const array<string, columnasRegistroCompetencia> &, const string);
 
@@ -60,7 +60,6 @@ int mostrarMenu(const string, const int);
 
 //? Formateador Salida
 void formatearParaSalida(string &);
-string formatearSalidaDatosCompetencia(string[]);
 
 //? Formateador Entrada
 string convertirRegistroEnString(const array<string, columnasRegistro> &);
@@ -69,6 +68,7 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &);
 int main()
 {
     setlocale(LC_CTYPE, "Spanish");
+    // system("CLS");
     const string ArchivoAutos = "Autos.txt";
     const string ArchivoCompetencias = "Competencias.txt";
 
@@ -94,7 +94,7 @@ int main()
             break;
         case 2:
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            menuInventarioCompetencias(ArchivoAutos, ArchivoCompetencias);
+            menuInventarioCompetencias(ArchivoCompetencias, ArchivoAutos);
             cout << "Presione Enter para continuar...";
             cin.get();
             break;
@@ -111,7 +111,14 @@ int main()
             cin.get();
             break;
         case 5:
-            deseaSalir = true;
+            if (confirmarAccion("Desea salir del programa?"))
+            {
+                deseaSalir = true;
+            }
+            else
+            {
+                deseaSalir = false;
+            }
             break;
         default:
             cout << "Opción no válida. Intente de nuevo." << endl;
@@ -148,7 +155,6 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
         array<string, columnasRegistro> registroAuto;
 
         bool autoEncontrado = false;
-        streampos direccionRegistroEncontrado;
 
         while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
         {
@@ -175,7 +181,6 @@ bool eliminarRegistroAuto(const string &codigo, const string &direccionArchivo)
         inArchivoAutos.close();
 
         string seleccionUsuario;
-        bool deseaEliminar, entradaCorrecta;
 
         if (autoEncontrado)
         {
@@ -288,7 +293,6 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
         array<string, columnasRegistro> registroAutoModificado;
 
         bool autoEncontrado = false;
-        streampos direccionRegistroEncontrado;
 
         while (inArchivoAutos >> registroAuto[0] >> quoted(registroAuto[1]) >> registroAuto[2] >> registroAuto[3] >> quoted(registroAuto[4]) >> registroAuto[5] >> registroAuto[6])
         {
@@ -307,17 +311,16 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
                      << "============================ \n";
 
                 imprimirDatosAuto(registroAuto);
-                bool entradaCorrecta = false;
 
                 string mensaje = "Ingrese la velocidad máxima (km/h) del automóvil ";
                 mensaje += "\n (igual a 0 & más de 3 cifras serán omitidas): ";
-                entradaCorrecta = solicitarNumero(mensaje, 4, registroAuto[2], 999, 1);
+                solicitarNumero(mensaje, 4, registroAuto[2], 999, 1);
 
                 cin.clear();
 
                 mensaje = "Ingrese los caballos de fuerza(hp) del automóvil";
                 mensaje += "\n (más de 3 cifras serán omitidas): ";
-                entradaCorrecta = solicitarNumero(mensaje, 4, registroAuto[3], 999, 1);
+                solicitarNumero(mensaje, 4, registroAuto[3], 999, 1);
 
                 cin.clear();
                 registroAutoModificado = registroAuto;
@@ -332,7 +335,6 @@ void modificarRegistroAuto(const string &codigo, const string &direccionArchivo)
         inArchivoAutos.close();
 
         string seleccionUsuario;
-        bool deseaEliminar, entradaCorrecta;
 
         if (autoEncontrado)
         {
@@ -596,17 +598,14 @@ string menuEstadoCompetencia()
             {
 
             case 1:
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 estadoCompetencia = "En proceso";
                 entradaCorrecta = true;
                 break;
             case 2:
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 estadoCompetencia = "Cancelada";
                 entradaCorrecta = true;
                 break;
             case 3:
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 estadoCompetencia = "Finalizada";
                 entradaCorrecta = true;
                 break;
@@ -623,6 +622,49 @@ string menuEstadoCompetencia()
     } while (!entradaCorrecta);
 
     return estadoCompetencia;
+}
+
+string menuGanadorCompetencia(const string auto1, const string auto2)
+{
+    int seleccionMenu = 0;
+    bool entradaCorrecta = false;
+    string autoGanador = "";
+
+    string menu = "\n\n************************************\n"
+                  "Seleccione el ganador de la competencia.\n"
+                  "1. " +
+                  auto1 + "\n"
+                          "2. " +
+                  auto2 + "\n"
+                          "Seleccione una opcion: ";
+
+    do
+    {
+        seleccionMenu = mostrarMenu(menu, 2);
+
+        switch (seleccionMenu)
+        {
+
+        case 1:
+            autoGanador = auto1;
+            entradaCorrecta = true;
+            break;
+        case 2:
+            autoGanador = auto2;
+            entradaCorrecta = true;
+            break;
+        default:
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "\nERROR: No existe una opción con este número, intenta de nuevo.\n";
+            entradaCorrecta = false;
+            cout << "Presione Enter para continuar...";
+            cin.get();
+            break;
+        }
+
+    } while (!entradaCorrecta);
+
+    return autoGanador;
 }
 
 void reporteCompetencias(const string &direccionArchivo)
@@ -655,9 +697,9 @@ void reporteCompetencias(const string &direccionArchivo)
                  << setw(11) << registroCompetencia[1] << "|"
                  << setw(11) << registroCompetencia[2] << "|"
                  << setw(10) << registroCompetencia[3] << "|"
-                 << setw(15) << registroCompetencia[4] << "|"
-                 << setw(15) << registroCompetencia[5] << "|"
-                 << setw(15) << registroCompetencia[6] << "|" << endl;
+                 << setw(25) << registroCompetencia[4] << "|"
+                 << setw(25) << registroCompetencia[5] << "|"
+                 << setw(10) << registroCompetencia[6] << "|" << endl;
         }
     }
 }
@@ -718,12 +760,25 @@ bool validarNombre(const string nombre)
 
 bool validarNumeroRango(const string &numero, const int max, const int min)
 {
-    int num = stoi(numero);
-    if (num > max || num < min)
+    try
     {
+        int num = stoi(numero);
+        if (num > max || num < min)
+        {
+            return false;
+        }
+        return true;
+    }
+    catch (const invalid_argument &e)
+    {
+        cerr << "Error: El número ingresado no es válido." << endl;
         return false;
     }
-    return true;
+    catch (const out_of_range &e)
+    {
+        cerr << "Error: El número ingresado está fuera del rango permitido." << endl;
+        return false;
+    }
 }
 
 bool validarSoloNumero(const string &numero)
@@ -799,7 +854,7 @@ void consultarAutoInventario(const string direccionArchivo)
         else
         {
             array<string, columnasRegistro> contenidoAuto = getAuto(codigoAuto, direccionArchivo);
-            if (!contenidoAuto.empty())
+            if (!contenidoAuto.empty() && contenidoAuto[0] == codigoAuto)
             {
                 imprimirDatosAuto(contenidoAuto);
             }
@@ -842,8 +897,9 @@ void consultarCompetenciaInventario(const string direccionArchivo)
         else
         {
             array<string, columnasRegistro> contenidoCompetencia = getCompetencia(codigoCompetencia, direccionArchivo);
-            if (!contenidoCompetencia.empty())
+            if (!contenidoCompetencia.empty() && contenidoCompetencia[0] == codigoCompetencia)
             {
+                cout << "Competencia encontrada!" << endl;
                 imprimirDatosCompetencia(contenidoCompetencia);
             }
             else
@@ -871,11 +927,11 @@ bool ingresarAutoAlInventario(const string direccioArchivo)
     cout << "Código de automóvil (generado automáticamente): " << codigo << endl;
 
     solicitarTexto("Ingrese el nombre del automóvil (máximo 25 caracteres): ", nombreAuto, 25);
-    solicitarNumero("Ingrese la velocidad máxima (km/h)", 4, velocidadMaxima, 999, 1);
-    solicitarNumero("Ingrese los caballos de fuerza(hp)", 4, caballosFuerza, 999, 1);
+    solicitarNumero("Ingrese la velocidad máxima (km/h): ", 4, velocidadMaxima, 999, 1);
+    solicitarNumero("Ingrese los caballos de fuerza(hp): ", 4, caballosFuerza, 999, 1);
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     solicitarTexto("Ingrese el equipo/propietario del automóvil (máximo 25 caracteres): ", equipoPropietario, 25);
-    solicitarNumero("Ingrese el costo del automóvil (sin punto o coma decimal)", 9, costoAuto, 99999999, 1);
+    solicitarNumero("Ingrese el costo del automóvil (sin punto o coma decimal): ", 9, costoAuto, 99999999, 1);
 
     string mensaje = "Ingrese el número de identificación de quien registra el automóvil";
     mensaje += "\n (más de 8 cifras serán omitidas): ";
@@ -893,7 +949,7 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
 {
     string categoriaCompetencia, codigo, fechaCompetencia;
     string estadoCompetencia, codigoAuto1;
-    string codigoAuto2, identificacionPropietario;
+    string codigoAuto2, autoGanador;
     array<string, columnasRegistro> datosCompetencia;
     array<string, 7> registroCompetencia;
 
@@ -906,11 +962,9 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
     codigo = generarCodigoUnico("C", direccionArchivo);
     cout << "Código único de competencia (generado automáticamente): " << codigo << endl;
 
-    string codigoAuto;
-
     bool deseaSalir = false;
     cout << "\n============================ \n";
-    cout << "Consultar auto del inventario \n";
+    cout << "Ingresar autos del inventario \n";
     cout << "============================ \n";
 
     array<array<string, columnasRegistro>, 2> contenidoAutos;
@@ -928,7 +982,7 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
             cerr << "Error: Código de auto no puede estar vacío." << endl;
             entradaCorrecta = false;
         }
-        else if (!validarCodigo(codigoAuto, 'A'))
+        else if (!validarCodigo(codigoAuto1, 'A'))
         {
             cerr << "Código inválido, por favor siga el formato." << endl;
             entradaCorrecta = false;
@@ -963,11 +1017,11 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
             cerr << "Error: Código de auto no puede estar vacío." << endl;
             entradaCorrecta = false;
         }
-        else if (codigoAuto2 == codigoAuto1)
+        else if (codigoAuto1 == codigoAuto2)
         {
             cerr << "No puede colocarse dos veces un auto en una competencia" << endl;
         }
-        else if (!validarCodigo(codigoAuto, 'A'))
+        else if (!validarCodigo(codigoAuto2, 'A'))
         {
             cerr << "Código inválido, por favor siga el formato." << endl;
             entradaCorrecta = false;
@@ -1017,17 +1071,31 @@ bool ingresarCompetenciaAlInventario(const string direccionArchivo, const string
 
     estadoCompetencia = menuEstadoCompetencia();
 
+    if (estadoCompetencia == "Finalizada")
+    {
+        autoGanador = menuGanadorCompetencia(codigoAuto1, codigoAuto2);
+        cout << "El ganador de la competencia es: " << autoGanador << endl;
+    }
+    else
+    {
+        autoGanador = "N/A";
+    }
+
     formatearParaSalida(categoriaCompetencia);
     formatearParaSalida(estadoCompetencia);
 
-    datosCompetencia = array<string, columnasRegistro>{codigo, codigoAuto1, codigoAuto2, fechaCompetencia, categoriaCompetencia, estadoCompetencia};
+    datosCompetencia = array<string, columnasRegistro>{codigo, codigoAuto1, codigoAuto2, fechaCompetencia, categoriaCompetencia, estadoCompetencia, autoGanador};
 
     if (setCompetencia(datosCompetencia, direccionArchivo))
     {
+        cout << "Presione Enter para continuar...";
+        cin.get();
         return true;
     }
     else
     {
+        cout << "Presione Enter para continuar...";
+        cin.get();
         return false;
     }
 }
@@ -1111,7 +1179,7 @@ void menuInventarioCompetencias(const string direccionArchivoCompetencias, const
             break;
         case 2:
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            consultarAutoInventario(direccionArchivoCompetencias);
+            consultarCompetenciaInventario(direccionArchivoCompetencias);
             cout << "Presione Enter para continuar...";
             cin.get();
             break;
@@ -1138,7 +1206,6 @@ int mostrarMenu(const string menu, const int opciones)
         {
             cerr << "Error: Selección inválida. Intente de nuevo." << endl;
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
         else
         {
@@ -1157,11 +1224,17 @@ bool solicitarNumero(const string &mensaje, const short anchoCampo, string &nume
     {
         cout << mensaje;
         cin >> setw(anchoCampo) >> numero;
-
-        if (!validarSoloNumero(numero))
+        cin.width(0);
+        if (cin.fail())
         {
-            cerr << "El dato que ingresaste no es un número o añadiste otros caracteres" << endl;
+            cerr << "Error: Entrada inválida. Por favor, ingrese un número válido." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             entradaCorrecta = false;
+        }
+        else if (!validarSoloNumero(numero))
+        {
+            cerr << "Error: Sólo está permitido ingresar números";
         }
         else if (!validarNumeroRango(numero, max, min))
         {
@@ -1222,6 +1295,10 @@ string convertirRegistroEnString(const array<string, columnasRegistro> &infoAuto
 // Formateador salida
 void formatearParaSalida(string &dato)
 {
+    if (dato.length() > 25)
+    {
+        dato = dato.substr(0, 25); // Truncate to 25 characters
+    }
     dato = u8"\"" + dato + string(25 - dato.length(), ' ') + "\"";
 }
 
